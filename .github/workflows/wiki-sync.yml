@@ -18,7 +18,7 @@ jobs:
       - name: Sync docs/ to wiki
         run: |
           git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git" /tmp/wiki
-          rsync -av --delete docs/ /tmp/wiki/
+          rsync -av docs/ /tmp/wiki/
           cd /tmp/wiki
           git config user.name "MCP Builder Toolkit Bot"
           git config user.email "bot@mcpbuilder.dev"
