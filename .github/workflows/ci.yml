@@ -46,10 +46,15 @@ jobs:
         run: uv run mypy src
       - name: Test (unit + generated-project acceptance)
         # Includes T027/T028/T042 (@pytest.mark.generated): install, quality gates, MCP client smoke.
-        run: uv run pytest --cov=mcp_builder --cov-report=term-missing
+        run: uv run pytest --cov=mcp_builder --cov-report=xml --cov-report=term-missing
         env:
           # Generated projects install FastMCP and friends; allow longer cold-cache installs.
           UV_HTTP_TIMEOUT: "120"
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   container-http-smoke:
     # T053: Linux-only container build + HTTP smoke when Docker is available.
