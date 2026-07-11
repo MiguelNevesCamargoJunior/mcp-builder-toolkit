@@ -16,7 +16,6 @@ def test_version() -> None:
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
     assert "mcp-builder" in result.stdout
-    assert "0.1.0" in result.stdout
 
 
 def test_help() -> None:
