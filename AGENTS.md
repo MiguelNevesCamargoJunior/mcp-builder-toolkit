@@ -97,16 +97,16 @@ uv run ruff check src tests --fix
 
 ## Release rules
 
-26. The single source of truth for the package version is
-    `src/mcp_builder/__init__.py`.
-27. Use `scripts/bump_version.py` to bump versions — it updates `__init__.py`,
-    runs `uv lock`, commits, tags, and pushes.
-28. Do not create release tags manually. Always use the script or the
-    auto-bump step in CI.
-29. After a successful release, CI auto-bumps to the next patch version on
-    `main`. Do not revert or modify auto-bump commits.
-30. Release notes go in `docs/release-notes-<version>.md` and the
-    `CHANGELOG.md`.
+26. The package version is derived from the **latest git tag** via `hatch-vcs`.
+    The tag is the single source of truth — never hardcode a version.
+27. To create a release, tag and push:
+    ```bash
+    git tag v0.1.0a4 && git push origin v0.1.0a4
+    ```
+28. The CI pipeline builds, signs, and publishes automatically.
+    No manual bump or auto-bump step needed.
+29. Release notes go in `docs/release-notes-<version>.md` and `CHANGELOG.md`.
+    These are manual — create the file before tagging.
 
 ## Documentation rules
 
