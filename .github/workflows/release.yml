@@ -90,15 +90,26 @@ jobs:
             --title "MCP Builder Toolkit $GITHUB_REF_NAME" \
             --notes-file "docs/release-notes-${GITHUB_REF_NAME#v}.md" \
             dist/* sbom.cdx.json
+      - name: Verify release notes
+        run: |
+          NOTE_FILE="docs/release-notes-${GITHUB_REF_NAME#v}.md"
+          if [ -f "$NOTE_FILE" ]; then
+            echo "Release notes: $NOTE_FILE"
+          else
+            echo "::error::Release notes not found: $NOTE_FILE"
+            echo "Create docs/release-notes-${GITHUB_REF_NAME#v}.md before tagging."
+            exit 1
+          fi
       - name: Publish to TestPyPI
+        continue-on-error: true
         env:
-          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
         run: |
           if [ -n "${UV_PUBLISH_TOKEN:-}" ]; then
             uv publish --publish-url https://test.pypi.org/legacy/ \
               --check-url https://test.pypi.org/simple/mcp-builder-toolkit/
           else
-            echo "::warning::Skipping TestPyPI — no token available."
+            echo "::warning::Skipping TestPyPI — set TEST_PYPI_TOKEN secret."
           fi
       - name: Publish to PyPI
         env:
@@ -109,14 +120,4 @@ jobs:
           else
             uv publish --trusted-publishing always \
               --check-url https://pypi.org/simple/mcp-builder-toolkit/
-          fi
-      - name: Update release notes
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          NOTE_FILE="docs/release-notes-${GITHUB_REF_NAME#v}.md"
-          if [ -f "$NOTE_FILE" ]; then
-            echo "Release notes: $NOTE_FILE"
-          else
-            echo "::warning::Release notes not found: $NOTE_FILE"
           fi
