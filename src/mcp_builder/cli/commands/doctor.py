@@ -28,7 +28,10 @@ from mcp_builder.manifest.loader import load_manifest_path
 from mcp_builder.manifest.normalize import normalize
 from mcp_builder.manifest.paths import safe_project_path
 from mcp_builder.service import DEFAULT_MANIFEST, build_planner
-from mcp_builder.targets.compatibility import CompatibilityRegistry
+from mcp_builder.targets.compatibility import (
+    DEFAULT_PROFILE_ID,
+    CompatibilityRegistry,
+)
 
 # Documentation anchors for remediation (stable relative links).
 _DOCS = {
@@ -149,20 +152,29 @@ def run_doctor(
 
 def _python_checks() -> list[Diagnostic]:
     major, minor = sys.version_info[:2]
-    if (major, minor) < (3, 12) or (major, minor) >= (3, 14):
+    registry = CompatibilityRegistry.default()
+    profile = registry.get(DEFAULT_PROFILE_ID)
+    supported = profile.python_versions() if profile else [(3, 12), (3, 13)]
+    if (major, minor) in supported:
         return [
             Diagnostic(
-                code=Codes.PROFILE_PYTHON,
-                severity=Severity.WARNING,
-                message=f"Python {major}.{minor} is outside the supported range 3.12-3.13",
-                hint=_DOCS[Codes.PROFILE_PYTHON],
+                code="MBT-COMPAT-010",
+                severity=Severity.INFO,
+                message=(
+                    f"Python {major}.{minor} is supported "
+                    f"(profile supports {', '.join(f'{m}.{n}' for m, n in supported)})"
+                ),
             )
         ]
     return [
         Diagnostic(
-            code="MBT-COMPAT-010",
-            severity=Severity.INFO,
-            message=f"Python {major}.{minor} is supported",
+            code=Codes.PROFILE_PYTHON,
+            severity=Severity.WARNING,
+            message=(
+                f"Python {major}.{minor} is outside the supported range "
+                f"({', '.join(f'{m}.{n}' for m, n in supported)})"
+            ),
+            hint=_DOCS[Codes.PROFILE_PYTHON],
         )
     ]
 

@@ -1,0 +1,91 @@
+name: Bug report
+description: Report a problem to help improve MCP Builder Toolkit
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Fill out the fields below.
+
+  - type: input
+    id: version
+    attributes:
+      label: mcp-builder version
+      description: Output of `mcp-builder --version`
+      placeholder: "0.1.0a4"
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12.3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+    validations:
+      required: true
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - stdio
+        - streamable-http
+        - N/A
+
+  - type: input
+    id: profile
+    attributes:
+      label: Profile
+      placeholder: "fastmcp-python-2026.07"
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command executed
+      description: Paste the exact command and output
+      render: bash
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: manifest
+    attributes:
+      label: Manifest (sanitized)
+      description: Remove any secrets or sensitive data
+      render: yaml
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have removed any secrets, tokens, or sensitive data from the manifest
+          required: true
+        - label: I have run `mcp-builder doctor --format json` and attached the output

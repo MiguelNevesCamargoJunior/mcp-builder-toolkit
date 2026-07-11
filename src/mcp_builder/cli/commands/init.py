@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import keyword
+import re
 from enum import StrEnum
 from pathlib import Path
 
@@ -139,6 +141,44 @@ def run_init(
                 severity=Severity.ERROR,
                 message=str(exc),
                 path="metadata.name",
+            )
+        )
+        return _result(diagnostics)
+
+    if not re.match(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", project_name):
+        diagnostics.append(
+            Diagnostic(
+                code=Codes.MANIFEST_SEMANTIC,
+                severity=Severity.ERROR,
+                message=(
+                    f"Project name must be a valid DNS label "
+                    f"(lowercase alphanumeric + hyphens): {project_name!r}"
+                ),
+                path="metadata.name",
+            )
+        )
+        return _result(diagnostics)
+
+    if keyword.iskeyword(package):
+        diagnostics.append(
+            Diagnostic(
+                code=Codes.MANIFEST_SEMANTIC,
+                severity=Severity.ERROR,
+                message=f"Derived package name {package!r} is a Python keyword",
+                path="project.packageName",
+            )
+        )
+        return _result(diagnostics)
+
+    registry = CompatibilityRegistry.default()
+    if registry.get(profile) is None:
+        diagnostics.append(
+            Diagnostic(
+                code=Codes.PROFILE_UNKNOWN,
+                severity=Severity.ERROR,
+                message=f"Unknown profile: {profile!r}",
+                path="spec.target.profile",
+                hint=f"Supported: {', '.join(registry.ids())}",
             )
         )
         return _result(diagnostics)

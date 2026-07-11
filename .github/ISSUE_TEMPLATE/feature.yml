@@ -1,0 +1,60 @@
+name: Feature request
+description: Suggest a new capability for MCP Builder Toolkit
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature. Please focus on the **problem**
+        rather than a specific solution.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Be specific about the use case and who benefits
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like this to work?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else have you considered?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: What does this affect?
+      multiple: true
+      options:
+        - Manifest (mcp-builder.yaml)
+        - Generated output (templates, golden trees)
+        - CLI commands
+        - Compatibility profile
+        - New target/runtime
+        - Other
+
+  - type: checkboxes
+    id: contractual
+    attributes:
+      label: Contractual impact
+      options:
+        - label: This changes the manifest schema or public contracts
+        - label: This requires an Architecture Decision Record (ADR)
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, references, or examples

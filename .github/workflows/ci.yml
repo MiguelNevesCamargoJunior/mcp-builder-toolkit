@@ -44,6 +44,18 @@ jobs:
         run: uv run ruff format --check src tests
       - name: Type check
         run: uv run mypy src
+      - name: Schema check (models vs committed JSON Schema)
+        shell: bash
+        run: uv run python scripts/export_manifest_schema.py --check
+      - name: Golden tree check (regenerate if templates changed)
+        shell: bash
+        run: |
+          uv run python scripts/update_golden.py 2>&1
+          if ! git diff --stat --exit-code tests/golden/; then
+            echo "::error::Golden trees are out of date. Run 'uv run python scripts/update_golden.py' and commit the changes."
+            git diff tests/golden/
+            exit 1
+          fi
       - name: Test (unit + generated-project acceptance)
         # Includes T027/T028/T042 (@pytest.mark.generated): install, quality gates, MCP client smoke.
         run: uv run pytest --cov=mcp_builder --cov-report=term-missing
