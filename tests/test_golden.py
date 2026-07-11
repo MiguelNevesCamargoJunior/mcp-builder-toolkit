@@ -1,4 +1,4 @@
-"""T025: golden-tree tests for minimal stdio generation output."""
+"""T025: golden-tree tests for generation output."""
 
 from __future__ import annotations
 
@@ -11,8 +11,6 @@ from mcp_builder.cli.exit_codes import ExitCode
 from mcp_builder.domain.diagnostics import CommandStatus
 
 GOLDEN_ROOT = Path(__file__).parent / "golden"
-STDIO_MANIFEST = GOLDEN_ROOT / "stdio-minimal.manifest.yaml"
-STDIO_TREE = GOLDEN_ROOT / "stdio-minimal"
 
 # Paths/segments never part of the generation golden snapshot.
 _IGNORE_PARTS = {
@@ -46,19 +44,19 @@ def _file_map(root: Path) -> dict[str, str]:
     return mapping
 
 
-@pytest.mark.golden
-def test_golden_stdio_minimal_tree(tmp_path: Path) -> None:
-    """Generated stdio tree must match the committed golden snapshot."""
-    assert STDIO_MANIFEST.is_file(), f"missing {STDIO_MANIFEST}"
-    assert STDIO_TREE.is_dir(), f"missing {STDIO_TREE}"
+def _assert_golden_tree(tmp_path: Path, manifest_rel: str, tree_rel: str) -> None:
+    manifest_path = GOLDEN_ROOT / manifest_rel
+    tree_path = GOLDEN_ROOT / tree_rel
+    assert manifest_path.is_file(), f"missing {manifest_path}"
+    assert tree_path.is_dir(), f"missing {tree_path}"
 
     project = tmp_path / "project"
     project.mkdir()
-    manifest_path = project / "mcp-builder.yaml"
-    manifest_path.write_text(STDIO_MANIFEST.read_text(encoding="utf-8"), encoding="utf-8")
+    proj_manifest = project / "mcp-builder.yaml"
+    proj_manifest.write_text(manifest_path.read_text(encoding="utf-8"), encoding="utf-8")
 
     result, code = run_generate(
-        file=manifest_path,
+        file=proj_manifest,
         output=project,
         dry_run=False,
         force_managed=set(),
@@ -66,15 +64,14 @@ def test_golden_stdio_minimal_tree(tmp_path: Path) -> None:
     assert code is ExitCode.SUCCESS, result.diagnostics
     assert result.status is CommandStatus.OK
 
-    expected = _file_map(STDIO_TREE)
+    expected = _file_map(tree_path)
     actual = _file_map(project)
-    # Drop the input manifest from actual comparison
     actual.pop("mcp-builder.yaml", None)
 
     missing = sorted(set(expected) - set(actual))
     extra = sorted(set(actual) - set(expected))
-    assert not missing, f"missing generated files: {missing}"
-    assert not extra, f"unexpected generated files: {extra}"
+    assert not missing, f"missing generated files ({tree_rel}): {missing}"
+    assert not extra, f"unexpected generated files ({tree_rel}): {extra}"
 
     mismatches: list[str] = []
     for rel in sorted(expected):
@@ -83,5 +80,15 @@ def test_golden_stdio_minimal_tree(tmp_path: Path) -> None:
     assert not mismatches, (
         "content mismatch for:\n"
         + "\n".join(f"  - {m}" for m in mismatches)
-        + "\nUpdate tests/golden/stdio-minimal after intentional template changes."
+        + f"\nUpdate {tree_rel} after intentional template changes."
     )
+
+
+@pytest.mark.golden
+def test_golden_stdio_minimal_tree(tmp_path: Path) -> None:
+    _assert_golden_tree(tmp_path, "stdio-minimal.manifest.yaml", "stdio-minimal")
+
+
+@pytest.mark.golden
+def test_golden_http_docker_tree(tmp_path: Path) -> None:
+    _assert_golden_tree(tmp_path, "http-docker.manifest.yaml", "http-docker")

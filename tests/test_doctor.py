@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import jsonschema
+import pytest
 from typer.testing import CliRunner
 
 from mcp_builder.cli.app import app
@@ -104,3 +105,45 @@ def test_doctor_file_option_uses_manifest_directory(tmp_path: Path) -> None:
     assert not any(d.code == "MBT-DOCTOR-001" for d in result.diagnostics)
     state_diagnostic = next(d for d in result.diagnostics if d.code == "MBT-GEN-021")
     assert state_diagnostic.path == str(project / ".mcp-builder" / "state.json")
+
+
+def test_doctor_docker_check_docker_not_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("mcp_builder.cli.commands.doctor.shutil.which", lambda cmd: "/usr/bin/docker" if cmd == "docker" else None)
+    project = tmp_path / "dock-proj"
+    project.mkdir()
+    run_init(
+        directory=project,
+        name="dock-proj",
+        transport="streamable-http",
+        profile="fastmcp-python-2026.07",
+        no_interactive=True,
+        force_empty=True,
+    )
+    manifest_path = project / "mcp-builder.yaml"
+    manifest = manifest_path.read_text(encoding="utf-8")
+    manifest = manifest.replace("docker: false", "docker: true")
+    manifest = manifest.replace("compose: false", "compose: true")
+    manifest_path.write_text(manifest, encoding="utf-8")
+
+    result, code = run_generate(
+        file=manifest_path,
+        output=project,
+        dry_run=False,
+        force_managed=set(),
+    )
+    assert code is ExitCode.SUCCESS
+
+    monkeypatch.setattr("mcp_builder.cli.commands.doctor.shutil.which", lambda cmd: None if cmd == "docker" else "/usr/bin/uv")
+    result = run_doctor(directory=project, file=None)
+    assert any(d.code == "MBT-DOCTOR-011" for d in result.diagnostics)
+    assert any(d.code == "MBT-DOCTOR-010" for d in result.diagnostics) is False
+
+
+def test_doctor_hints_attached_for_known_codes(tmp_path: Path) -> None:
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    result = run_doctor(directory=empty, file=None)
+    hinted_codes = {"MBT-MANIFEST-001", "MBT-DOCTOR-010"}
+    for d in result.diagnostics:
+        if d.code in hinted_codes:
+            assert d.hint is not None, f"Missing hint for {d.code}"

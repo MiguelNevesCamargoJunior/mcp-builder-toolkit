@@ -160,3 +160,70 @@ def test_structured_logging_can_be_disabled(tmp_path: Path) -> None:
     plan = build_planner().plan(project, tmp_path)
     server = next(a for a in plan.artifacts if a.relative_path.endswith("server.py"))
     assert "class JsonFormatter" not in server.content
+
+
+def test_docker_stdio_validation_warning(tmp_path: Path) -> None:
+    text = """\
+apiVersion: mcpbuilder.dev/v1alpha1
+kind: MCPServerProject
+metadata:
+  name: docker-stdio
+  version: 0.1.0
+spec:
+  target:
+    runtime: fastmcp-python
+    profile: fastmcp-python-2026.07
+    protocolVersion: "2025-11-25"
+  project:
+    python: ">=3.12,<3.14"
+    packageName: docker_stdio
+  transport:
+    type: stdio
+  features:
+    tests: false
+    lint: false
+    typing: false
+    docker: true
+    compose: false
+"""
+    loaded = load_manifest_text(text)
+    assert loaded.manifest is not None
+    project, _ = normalize(loaded.manifest)
+    assert project is not None
+    plan = build_planner().plan(project, tmp_path)
+    assert any(d.code == "MBT-MANIFEST-004" for d in plan.diagnostics), [d.message for d in plan.diagnostics]
+
+
+def test_docker_stdio_dockerfile_has_no_expose(tmp_path: Path) -> None:
+    text = """\
+apiVersion: mcpbuilder.dev/v1alpha1
+kind: MCPServerProject
+metadata:
+  name: docker-stdio-2
+  version: 0.1.0
+spec:
+  target:
+    runtime: fastmcp-python
+    profile: fastmcp-python-2026.07
+    protocolVersion: "2025-11-25"
+  project:
+    python: ">=3.12,<3.14"
+    packageName: docker_stdio_2
+  transport:
+    type: stdio
+  features:
+    tests: false
+    lint: false
+    typing: false
+    docker: true
+    compose: false
+"""
+    loaded = load_manifest_text(text)
+    assert loaded.manifest is not None
+    project, diags = normalize(loaded.manifest)
+    assert project is not None
+    plan = build_planner().plan(project, tmp_path)
+    dockerfile = next(a for a in plan.artifacts if a.relative_path == "Dockerfile")
+    assert "# stdio: no EXPOSE" in dockerfile.content
+    assert "ENV MCP_HOST=" not in dockerfile.content
+    assert '.venv/bin:$PATH"' in dockerfile.content

@@ -139,6 +139,82 @@ def test_derived_artifact_create_update_and_unchanged(tmp_path: Path) -> None:
     assert updated.changes[0].action.value == "update"
 
 
+def test_duplicate_path_error_in_plan(tmp_project: Path) -> None:
+    from mcp_builder.domain.diagnostics import Severity
+
+    loaded = load_manifest_path(tmp_project / "mcp-builder.yaml")
+    assert loaded.manifest is not None
+    project, _ = normalize(loaded.manifest)
+    assert project is not None
+
+    plan = build_planner().plan(project, tmp_project)
+    diags = [d for d in plan.diagnostics if d.code == "MBT-GEN-002"]
+    assert not diags, f"unexpected duplicates in minimal plan: {diags}"
+
+
+def test_rollback_failure_logs_additional_detail(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from mcp_builder.domain.artifacts import ArtifactPlan, ArtifactSpec
+    from mcp_builder.domain.diagnostics import Ownership
+    from mcp_builder.generation.renderer import content_hash
+    from mcp_builder.generation.transaction import apply_plan, _restore_files
+
+    spec = ArtifactSpec(
+        relative_path="test.txt",
+        content="hello",
+        content_hash=content_hash("hello"),
+        ownership=Ownership.MANAGED,
+        origin="test",
+    )
+    plan = ArtifactPlan(
+        project_root=str(tmp_path),
+        manifest_hash="sha256:test",
+        builder_version="test",
+        profile="test",
+        artifacts=[spec],
+    )
+
+    def fail_save(*args: object, **kwargs: object) -> None:
+        raise OSError("state write failed")
+
+    def fail_restore(*args: object, **kwargs: object) -> OSError:
+        return OSError("restore also failed")
+
+    monkeypatch.setattr("mcp_builder.generation.transaction.save_state", fail_save)
+    monkeypatch.setattr("mcp_builder.generation.transaction._restore_files", fail_restore)
+    result = apply_plan(plan, tmp_path)
+    assert not result.applied
+    assert any("rollback also failed" in d.message for d in result.diagnostics)
+
+
+def test_no_prior_state_user_modified(tmp_path: Path) -> None:
+    from mcp_builder.domain.artifacts import ArtifactPlan, ArtifactSpec
+    from mcp_builder.domain.diagnostics import Ownership
+    from mcp_builder.generation.renderer import content_hash
+    from mcp_builder.generation.transaction import apply_plan
+
+    existing = tmp_path / "existing.txt"
+    existing.write_text("user content\n", encoding="utf-8")
+
+    spec = ArtifactSpec(
+        relative_path="existing.txt",
+        content="generated content\n",
+        content_hash=content_hash("generated content\n"),
+        ownership=Ownership.MANAGED,
+        origin="test",
+    )
+    plan = ArtifactPlan(
+        project_root=str(tmp_path),
+        manifest_hash="sha256:test",
+        builder_version="test",
+        profile="test",
+        artifacts=[spec],
+    )
+    result = apply_plan(plan, tmp_path)
+    assert not result.applied
+    assert any(c.action.value == "conflict" for c in result.changes)
+    assert "generated content" not in existing.read_text(encoding="utf-8")
+
+
 def test_removed_managed_file_is_deleted_but_modified_file_becomes_orphan(
     tmp_path: Path,
 ) -> None:

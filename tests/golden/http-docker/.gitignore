@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.env
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.dmypy.json
+dmypy.json
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Builder (state is local; keep directory structure optional)
+# .mcp-builder/ is project-local generation state — commit if you want reproducible regen

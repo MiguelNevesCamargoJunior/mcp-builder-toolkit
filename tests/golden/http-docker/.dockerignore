@@ -1,0 +1,11 @@
+.venv
+.git
+.mcp-builder
+.pytest_cache
+.mypy_cache
+.ruff_cache
+__pycache__
+*.pyc
+.coverage
+htmlcov
+.env

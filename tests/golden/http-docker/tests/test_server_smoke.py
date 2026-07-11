@@ -1,0 +1,25 @@
+"""Smoke test that the server module imports and exposes tools."""
+
+from __future__ import annotations
+
+import asyncio
+
+from http_docker_golden import server
+
+
+def test_server_module_exports_mcp() -> None:
+    assert hasattr(server, "mcp")
+    assert server.mcp is not None
+
+
+def test_server_has_expected_tools() -> None:
+    tools = asyncio.run(server.mcp.list_tools())
+    names = {tool.name for tool in tools}
+    assert "echo" in names
+    assert "health" in names
+
+
+def test_server_echo_tool_callable() -> None:
+    result = asyncio.run(server.mcp.call_tool("echo", {"message": "ping"}))
+    assert result.is_error is False
+    assert result.structured_content == {"result": "ping"}
