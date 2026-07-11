@@ -130,3 +130,66 @@ uv run ruff check src tests --fix
     ```yaml
     - uses: actions/some-action@abc123def456... # vX.Y.Z
     ```
+
+## Agent review playbooks
+
+These are advisory review roles that AI agents may perform on PRs. They
+are **not** required checks — they produce structured output for human
+reviewers.
+
+### Scope and Contract Guardian
+
+Verifies:
+- Adherence to constitution and feature scope.
+- No scope creep beyond the current feature spec.
+- Changes to public contracts (``specs/**/contracts/``) are flagged.
+- ADR requirement is identified for architectural changes.
+- Migration notes are present for breaking changes.
+
+Output:
+```json
+{
+  "scope": "within-feature | new-feature-required | constitutional-conflict",
+  "contract_change": true | false,
+  "adr_required": true | false,
+  "migration_required": true | false,
+  "findings": []
+}
+```
+
+### Security and Supply Chain Reviewer
+
+Verifies:
+- Path safety and symlink handling.
+- YAML parsing and serialization safety.
+- HTTP host/port/path validation.
+- New runtime dependencies are justified.
+- Workflow permissions follow least privilege.
+- All actions pinned by commit hash.
+- No secrets or sensitive data in output.
+- Threat model updated if applicable.
+
+### Generated Artifact Reviewer
+
+Verifies:
+- Template changes update golden trees.
+- Artifact ownership (managed / scaffold-once / derived) is correct.
+- Output is deterministic.
+- Profile compatibility is maintained.
+- Generated CI and documentation match the profile.
+- No runtime dependency on the builder in generated projects.
+
+### Release Steward
+
+Verifies before tagging:
+- Version tag matches CHANGELOG and release notes.
+- ``docs/release-notes-<version>.md`` exists.
+- ``CHANGELOG.md`` is updated.
+- Profile and support matrix are accurate.
+- Wheel and sdist build and pass smoke tests.
+- SBOM and Sigstore signatures are present.
+- README badges and install instructions are current.
+- Diff from last tag has been reviewed.
+
+The agent may compile draft release notes but must **not** create tags
+or publish without human action.
