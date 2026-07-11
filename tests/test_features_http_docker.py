@@ -191,7 +191,9 @@ spec:
     project, _ = normalize(loaded.manifest)
     assert project is not None
     plan = build_planner().plan(project, tmp_path)
-    assert any(d.code == "MBT-MANIFEST-004" for d in plan.diagnostics), [d.message for d in plan.diagnostics]
+    assert any(d.code == "MBT-MANIFEST-004" for d in plan.diagnostics), [
+        d.message for d in plan.diagnostics
+    ]
 
 
 def test_docker_stdio_dockerfile_has_no_expose(tmp_path: Path) -> None:

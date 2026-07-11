@@ -152,7 +152,9 @@ def test_duplicate_path_error_in_plan(tmp_project: Path) -> None:
     assert not diags, f"unexpected duplicates in minimal plan: {diags}"
 
 
-def test_rollback_failure_logs_additional_detail(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_rollback_failure_logs_additional_detail(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     from mcp_builder.domain.artifacts import ArtifactPlan, ArtifactSpec
     from mcp_builder.domain.diagnostics import Ownership
     from mcp_builder.generation.renderer import content_hash

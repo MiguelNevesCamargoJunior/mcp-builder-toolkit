@@ -107,8 +107,13 @@ def test_doctor_file_option_uses_manifest_directory(tmp_path: Path) -> None:
     assert state_diagnostic.path == str(project / ".mcp-builder" / "state.json")
 
 
-def test_doctor_docker_check_docker_not_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("mcp_builder.cli.commands.doctor.shutil.which", lambda cmd: "/usr/bin/docker" if cmd == "docker" else None)
+def test_doctor_docker_check_docker_not_available(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "mcp_builder.cli.commands.doctor.shutil.which",
+        lambda cmd: "/usr/bin/docker" if cmd == "docker" else None,
+    )
     project = tmp_path / "dock-proj"
     project.mkdir()
     run_init(
@@ -133,7 +138,10 @@ def test_doctor_docker_check_docker_not_available(tmp_path: Path, monkeypatch: p
     )
     assert code is ExitCode.SUCCESS
 
-    monkeypatch.setattr("mcp_builder.cli.commands.doctor.shutil.which", lambda cmd: None if cmd == "docker" else "/usr/bin/uv")
+    monkeypatch.setattr(
+        "mcp_builder.cli.commands.doctor.shutil.which",
+        lambda cmd: None if cmd == "docker" else "/usr/bin/uv",
+    )
     result = run_doctor(directory=project, file=None)
     assert any(d.code == "MBT-DOCTOR-011" for d in result.diagnostics)
     assert any(d.code == "MBT-DOCTOR-010" for d in result.diagnostics) is False
