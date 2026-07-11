@@ -1,5 +1,12 @@
 # MCP Builder Toolkit
 
+[![PyPI](https://img.shields.io/pypi/v/mcp-builder-toolkit)](https://pypi.org/project/mcp-builder-toolkit/)
+[![Python](https://img.shields.io/pypi/pyversions/mcp-builder-toolkit)](https://pypi.org/project/mcp-builder-toolkit/)
+[![CI](https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen)](https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/actions)
+[![License](https://img.shields.io/github/license/MiguelNevesCamargoJunior/mcp-builder-toolkit)](LICENSE)
+[![Status](https://img.shields.io/badge/status-alpha-yellow)]()
+
 Manifest-driven CLI that generates readable, tested Python MCP server projects with safe regeneration and optional Docker/CI assets.
 
 > MCP defines the protocol. MCP Builder Toolkit defines a repeatable way to create, inspect, test, and package an MCP server.
@@ -23,10 +30,8 @@ boundary and an API integration example.
 
 ## Install
 
-After the alpha is published to PyPI:
-
 ```bash
-uv tool install "mcp-builder-toolkit==0.1.0a1" --prerelease explicit
+uv tool install mcp-builder-toolkit
 mcp-builder --version
 ```
 
