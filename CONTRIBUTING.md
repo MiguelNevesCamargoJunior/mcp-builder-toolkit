@@ -65,10 +65,18 @@ uv run pytest -m golden
 
 ## Pull requests
 
-- Keep PRs focused and vertical (working generate path preferred).
-- Update acceptance tests when generated output changes.
-- Never silently overwrite scaffold-once semantics.
-- Include constitution check notes if behavior is security- or ownership-sensitive.
+1. **Fork** the repository (external contributors) or create a **branch** (maintainers).
+2. Open a PR against `main` with a clear title and description (see `.github/PULL_REQUEST_TEMPLATE.md`).
+3. Ensure **all status checks pass** before requesting review:
+   - `ruff check src tests`
+   - `mypy src`
+   - `pytest --cov=mcp_builder --cov-branch`
+4. Keep PRs focused and vertical (working generate path preferred).
+5. Update acceptance tests when generated output changes.
+6. Never silently overwrite scaffold-once semantics.
+7. Include constitution check notes if behavior is security- or ownership-sensitive.
+
+The `main` branch is **protected**: direct pushes are blocked, all merges require a PR with at least one approval and passing CI.
 
 ## License
 
