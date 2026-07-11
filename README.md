@@ -11,8 +11,8 @@ Manifest-driven CLI that generates readable, tested Python MCP server projects w
 
 > MCP defines the protocol. MCP Builder Toolkit defines a repeatable way to create, inspect, test, and package an MCP server.
 
-**Status:** v0.1.0a2 published; v0.1.0a3 in release hardening. Alpha software,
-not production-ready.
+**Status:** v0.1.0a4 published. Alpha software, not production-ready.
+**Version:** derived from the latest git tag via hatch-vcs.
 
 ## What the YAML controls
 
