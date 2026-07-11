@@ -50,7 +50,7 @@ class BuildState(BaseModel):
         return normalized
 
     @classmethod
-    def from_plan(cls, plan: ArtifactPlan, *, protocol_version: str | None = None) -> BuildState:
+    def from_plan(cls, plan: ArtifactPlan) -> BuildState:
         arts = {
             a.relative_path.replace("\\", "/"): ArtifactState(
                 ownership=a.ownership,
@@ -64,7 +64,7 @@ class BuildState(BaseModel):
             stateVersion=STATE_VERSION,
             builderVersion=plan.builder_version,
             profile=plan.profile,
-            protocolVersion=protocol_version or "2025-11-25",
+            protocolVersion=plan.protocol_version,
             manifestHash=plan.manifest_hash,
             artifacts=arts,
         )

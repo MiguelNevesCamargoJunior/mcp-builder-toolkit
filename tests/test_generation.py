@@ -44,6 +44,20 @@ def test_apply_writes_files(tmp_project: Path) -> None:
     assert (tmp_project / ".mcp-builder/state.json").is_file()
 
 
+def test_apply_does_not_reuse_predictable_user_temp_file(tmp_project: Path) -> None:
+    user_temp = tmp_project / "README.md.tmp"
+    user_temp.write_text("user-owned temp\n", encoding="utf-8")
+    loaded = load_manifest_path(tmp_project / "mcp-builder.yaml")
+    assert loaded.manifest is not None
+    project, _ = normalize(loaded.manifest)
+    assert project is not None
+
+    result = apply_plan(build_planner().plan(project, tmp_project), tmp_project)
+
+    assert result.applied
+    assert user_temp.read_text(encoding="utf-8") == "user-owned temp\n"
+
+
 def test_dry_run_no_writes(tmp_project: Path) -> None:
     loaded = load_manifest_path(tmp_project / "mcp-builder.yaml")
     assert loaded.manifest is not None
@@ -120,6 +134,7 @@ def test_derived_artifact_create_update_and_unchanged(tmp_path: Path) -> None:
             manifest_hash="sha256:manifest",
             builder_version="test",
             profile="test-profile",
+            protocol_version="2025-11-25",
             artifacts=[
                 ArtifactSpec(
                     relative_path="generated/index.json",
@@ -171,6 +186,7 @@ def test_rollback_failure_logs_additional_detail(
         manifest_hash="sha256:test",
         builder_version="test",
         profile="test",
+        protocol_version="2025-11-25",
         artifacts=[spec],
     )
 
@@ -208,6 +224,7 @@ def test_no_prior_state_user_modified(tmp_path: Path) -> None:
         manifest_hash="sha256:test",
         builder_version="test",
         profile="test",
+        protocol_version="2025-11-25",
         artifacts=[spec],
     )
     result = apply_plan(plan, tmp_path)
@@ -225,6 +242,7 @@ def test_removed_managed_file_is_deleted_but_modified_file_becomes_orphan(
             manifest_hash="sha256:manifest",
             builder_version="test",
             profile="test-profile",
+            protocol_version="2025-11-25",
             artifacts=[
                 ArtifactSpec(
                     relative_path=path,

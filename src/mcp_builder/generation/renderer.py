@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -17,7 +18,7 @@ def content_hash(text: str) -> str:
 
 def make_env(package: str, templates_package: str) -> Environment:
     """Create a strict environment bound to a package template directory."""
-    return Environment(
+    environment = Environment(
         loader=PackageLoader(package, templates_package),
         undefined=StrictUndefined,
         autoescape=select_autoescape(enabled_extensions=()),
@@ -25,6 +26,9 @@ def make_env(package: str, templates_package: str) -> Environment:
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    environment.filters["python_literal"] = lambda value: json.dumps(value, ensure_ascii=False)
+    environment.filters["toml_string"] = lambda value: json.dumps(value, ensure_ascii=False)
+    return environment
 
 
 def render_template(env: Environment, template_name: str, context: dict[str, Any]) -> str:

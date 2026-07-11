@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import ipaddress
+import re
 from typing import Annotated, Literal
 
+from packaging.version import InvalidVersion, Version
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 NAME_PATTERN = r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
@@ -14,6 +17,10 @@ SEMVER_PATTERN = (
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
 )
 PROFILE_PATTERN = r"^[a-z0-9][a-z0-9.-]+$"
+HOSTNAME_PATTERN = re.compile(
+    r"^(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?))*$"
+)
+HTTP_PATH_PATTERN = re.compile(r"^/[A-Za-z0-9._~!$&'()*+,;=:@%/-]*$")
 
 
 class StrictModel(BaseModel):
@@ -28,6 +35,22 @@ class MetadataModel(StrictModel):
     description: Annotated[str | None, Field(default=None, max_length=500)] = None
     version: Annotated[str, Field(pattern=SEMVER_PATTERN)]
     license: Annotated[str | None, Field(default=None, min_length=1, max_length=100)] = None
+
+    @field_validator("version")
+    @classmethod
+    def validate_python_version(cls, value: str) -> str:
+        try:
+            Version(value)
+        except InvalidVersion as exc:
+            raise ValueError("version must be valid PEP 440") from exc
+        return value
+
+    @field_validator("display_name", "license")
+    @classmethod
+    def reject_control_characters(cls, value: str | None) -> str | None:
+        if value is not None and any(ord(character) < 32 for character in value):
+            raise ValueError("value must not contain control characters")
+        return value
 
 
 class TargetModel(StrictModel):
@@ -59,6 +82,19 @@ class StreamableHttpTransportModel(StrictModel):
     port: Annotated[int, Field(ge=1, le=65535)] = 8000
     path: str = "/mcp"
 
+    @field_validator("host")
+    @classmethod
+    def validate_http_host(cls, value: str) -> str:
+        if value == "localhost":
+            return value
+        candidate = value.removeprefix("[").removesuffix("]")
+        try:
+            ipaddress.ip_address(candidate)
+        except ValueError:
+            if not HOSTNAME_PATTERN.fullmatch(value):
+                raise ValueError("HTTP host must be an IP address or DNS hostname") from None
+        return value
+
     @field_validator("path")
     @classmethod
     def validate_http_path(cls, value: str) -> str:
@@ -67,6 +103,8 @@ class StreamableHttpTransportModel(StrictModel):
         parts = [p for p in value.split("/") if p]
         if any(p in {".", ".."} for p in parts):
             raise ValueError("HTTP path must not contain path traversal segments")
+        if not HTTP_PATH_PATTERN.fullmatch(value):
+            raise ValueError("HTTP path contains unsupported URL characters")
         return value
 
 

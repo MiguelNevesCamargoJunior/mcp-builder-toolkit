@@ -25,7 +25,7 @@ def echo(message: str) -> str:
 
 def health() -> dict[str, str]:
     """Return a simple health status for the server."""
-    return {"status": "ok", "server": "{{ display_name }}"}
+    return {"status": "ok", "server": {{ display_name | python_literal }}}
 
 
 def register_example_tools(mcp: FastMCP) -> None:

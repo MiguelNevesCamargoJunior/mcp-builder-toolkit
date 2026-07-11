@@ -12,4 +12,4 @@ def test_echo_tool() -> None:
 def test_health_tool() -> None:
     result = health()
     assert result["status"] == "ok"
-    assert result["server"] == "{{ display_name }}"
+    assert result["server"] == {{ display_name | python_literal }}

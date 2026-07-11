@@ -174,7 +174,7 @@ def test_init_json_http_and_invalid_inputs(tmp_path: Path) -> None:
         ["init", str(tmp_path / "bad-name"), "--name", "Bad Name", "--no-interactive"],
     )
     assert bad_transport.exit_code == 2
-    assert "Unsupported transport" in bad_transport.output
+    assert "Invalid value" in bad_transport.output
     assert bad_name.exit_code == 2
     assert "cannot derive package name" in bad_name.output
 
@@ -204,6 +204,41 @@ def test_generate_json_and_invalid_manifest(tmp_path: Path) -> None:
 
 def test_global_flags_and_interactive_name(tmp_path: Path) -> None:
     project = tmp_path / "interactive"
-    result = runner.invoke(app, ["--quiet", "--no-color", "init", str(project)], input="chosen\n")
+    result = runner.invoke(
+        app,
+        [
+            "--quiet",
+            "--no-color",
+            "init",
+            str(project),
+            "--name",
+            "chosen",
+            "--no-interactive",
+        ],
+    )
     assert result.exit_code == 0
+    assert result.stdout == ""
     assert "name: chosen" in (project / "mcp-builder.yaml").read_text(encoding="utf-8")
+
+
+def test_cli_rejects_unknown_enum_values(tmp_path: Path) -> None:
+    bad_format = runner.invoke(
+        app, ["validate", "--format", "banana", "-f", str(tmp_path / "missing.yaml")]
+    )
+    bad_transport = runner.invoke(
+        app,
+        ["init", str(tmp_path / "project"), "--transport", "sse", "--no-interactive"],
+    )
+    assert bad_format.exit_code == 2
+    assert bad_transport.exit_code == 2
+
+
+def test_removed_alpha_flags_are_not_advertised() -> None:
+    init_help = runner.invoke(app, ["init", "--help"])
+    validate_help = runner.invoke(app, ["validate", "--help"])
+    generate_help = runner.invoke(app, ["generate", "--help"])
+    doctor_help = runner.invoke(app, ["doctor", "--help"])
+    assert "--force-empty" not in init_help.stdout
+    assert "--strict" not in validate_help.stdout
+    assert "--yes" not in generate_help.stdout
+    assert "--strict" not in doctor_help.stdout

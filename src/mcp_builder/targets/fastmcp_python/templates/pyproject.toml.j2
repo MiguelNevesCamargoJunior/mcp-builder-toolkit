@@ -5,10 +5,10 @@ build-backend = "hatchling.build"
 [project]
 name = "{{ metadata.name }}"
 version = "{{ version }}"
-description = "{{ description }}"
+description = {{ description | toml_string }}
 readme = "README.md"
 requires-python = "{{ python }}"
-license = "{{ license }}"
+license = {{ license | toml_string }}
 dependencies = [
   "fastmcp{{ fastmcp_constraint }}",
 ]

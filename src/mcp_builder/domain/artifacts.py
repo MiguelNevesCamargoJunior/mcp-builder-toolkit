@@ -27,5 +27,6 @@ class ArtifactPlan:
     manifest_hash: str
     builder_version: str
     profile: str
+    protocol_version: str
     artifacts: list[ArtifactSpec] = field(default_factory=list)
     diagnostics: list[Diagnostic] = field(default_factory=list)

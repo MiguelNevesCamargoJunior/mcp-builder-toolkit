@@ -49,7 +49,7 @@ The builder is not in the runtime request path after generation.
                          ▼
 ┌─────────────────────────────────────────────────────────┐
 │ State & Filesystem Transaction                          │
-│ ownership | hashes | conflicts | dry-run | atomic apply │
+│ ownership | hashes | conflicts | dry-run | staged apply │
 └─────────────────────────────────────────────────────────┘
 ```
 

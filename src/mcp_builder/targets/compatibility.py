@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+DEFAULT_PROFILE_ID = "fastmcp-python-2026.07"
+DEFAULT_RUNTIME = "fastmcp-python"
+DEFAULT_PROTOCOL = "2025-11-25"
+DEFAULT_PYTHON = ">=3.12,<3.15"
+DEFAULT_FASTMCP = ">=3.4.4,<3.5"
+
 
 @dataclass(frozen=True, slots=True)
 class CompatibilityProfile:
@@ -24,11 +30,11 @@ class CompatibilityRegistry:
     @classmethod
     def default(cls) -> CompatibilityRegistry:
         profile = CompatibilityProfile(
-            id="fastmcp-python-2026.07",
-            runtime="fastmcp-python",
-            protocol="2025-11-25",
-            python=">=3.12,<3.15",
-            fastmcp=">=3.4.4,<3.5",
+            id=DEFAULT_PROFILE_ID,
+            runtime=DEFAULT_RUNTIME,
+            protocol=DEFAULT_PROTOCOL,
+            python=DEFAULT_PYTHON,
+            fastmcp=DEFAULT_FASTMCP,
             description="FastMCP 3.4.x on Python 3.12-3.14, MCP 2025-11-25",
         )
         return cls({profile.id: profile})

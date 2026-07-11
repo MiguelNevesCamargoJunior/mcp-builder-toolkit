@@ -7,7 +7,23 @@ schemas.
 
 ## [Unreleased]
 
-No changes yet.
+### Security
+
+- Contain plan and state paths inside the project and reject symlinked
+  destination components.
+- Serialize generated Python, TOML, and Compose values contextually.
+- Reject YAML anchors and aliases before object construction.
+
+### Changed
+
+- Remove alpha CLI flags without implemented behavior and validate enum options.
+- Use one package version source and verify release tags against it.
+- Smoke-test wheel and sdist before the privileged publish job.
+
+## [0.1.0a2] - 2026-07-10
+
+- Added Python 3.14 support to the builder, generated profile, CI, and docs.
+- Added PyPI token fallback for the alpha release workflow.
 
 ## [0.1.0a1] - 2026-07-10
 
@@ -36,9 +52,10 @@ First public alpha.
 
 - Tools and API integrations are implemented in generated Python source, not
   declaratively in YAML.
-- Only FastMCP Python, Python 3.12-3.13, and MCP `2025-11-25` are supported.
+- Only FastMCP Python, Python 3.12-3.14, and MCP `2025-11-25` are supported.
 - Authentication, gateways, governance, audit, A2A, and multi-language targets
   are outside this release.
 
-[Unreleased]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/compare/v0.1.0a1...HEAD
+[Unreleased]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/compare/v0.1.0a2...HEAD
+[0.1.0a2]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/releases/tag/v0.1.0a2
 [0.1.0a1]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/releases/tag/v0.1.0a1

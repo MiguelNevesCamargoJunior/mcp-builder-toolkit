@@ -1,4 +1,4 @@
-"""Bump version in pyproject.toml, commit, tag, and push.
+"""Bump the single package version source, commit, tag, and push.
 
 Usage:
     uv run python scripts/bump_version.py patch   # 0.1.0a1 -> 0.1.0a2
@@ -14,59 +14,63 @@ import subprocess
 import sys
 from pathlib import Path
 
+from packaging.version import Version
+
 ROOT = Path(__file__).resolve().parents[1]
-PYPROJECT = ROOT / "pyproject.toml"
 INIT_PY = ROOT / "src/mcp_builder/__init__.py"
 
 
 def read_version() -> str:
-    text = PYPROJECT.read_text(encoding="utf-8")
-    m = re.search(r'^version\s*=\s*"(.*)"', text, re.MULTILINE)
+    text = INIT_PY.read_text(encoding="utf-8")
+    m = re.search(r'^__version__\s*=\s*"(.*)"', text, re.MULTILINE)
     if not m:
-        print("error: version not found in pyproject.toml")
+        print("error: __version__ not found in src/mcp_builder/__init__.py")
         sys.exit(1)
     return m.group(1)
 
 
 def write_version(version: str) -> None:
-    for path in (PYPROJECT, INIT_PY):
-        text = path.read_text(encoding="utf-8")
-        text = re.sub(r'^version\s*=\s*".*"', f'version = "{version}"', text, count=1, flags=re.MULTILINE)
-        path.write_text(text, encoding="utf-8")
-    print(f"version {version} written to pyproject.toml and __init__.py")
+    text = INIT_PY.read_text(encoding="utf-8")
+    text = re.sub(
+        r'^__version__\s*=\s*".*"',
+        f'__version__ = "{version}"',
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    INIT_PY.write_text(text, encoding="utf-8")
+    print(f"version {version} written to src/mcp_builder/__init__.py")
 
 
 def bump(version: str, part: str) -> str:
-    pre = re.search(r"(a|b|rc)\d+$", version)
-    parts = [int(x) for x in re.split(r"[.abrc]", version) if x.isdigit()]
+    parsed = Version(version)
+    major, minor, patch = parsed.release[:3]
+    pre = parsed.pre
 
     if part == "release":
         if pre:
-            return version[: version.index(pre.group())]
+            return f"{major}.{minor}.{patch}"
         print("error: no pre-release segment to remove")
         sys.exit(1)
 
     if part == "patch":
-        parts[-1] += 1
+        if pre:
+            return f"{major}.{minor}.{patch}{pre[0]}{pre[1] + 1}"
+        patch += 1
     elif part == "minor":
-        parts[-3] += 1
-        parts[-2] = 0
-        parts[-1] = 1 if pre else 0
+        minor += 1
+        patch = 0
     elif part == "major":
-        parts[-4] += 1 if len(parts) >= 4 else 1
-        parts[-3] = 0
-        parts[-2] = 0
-        parts[-1] = 1 if pre else 0
+        major += 1
+        minor = 0
+        patch = 0
     else:
         print(f"error: unknown part {part!r}")
         sys.exit(1)
 
     if pre:
-        base = ".".join(str(p) for p in parts[:3])
-        pre_type = re.search(r"(a|b|rc)", pre.group()).group()
-        pre_num = parts[3] if len(parts) > 3 else 1
-        return f"{base}{pre_type}{pre_num}"
-    return ".".join(str(p) for p in parts)
+        return f"{major}.{minor}.{patch}{pre[0]}1"
+    return f"{major}.{minor}.{patch}"
 
 
 def git(*args: str) -> None:
@@ -86,7 +90,7 @@ def main() -> None:
     subprocess.run(["uv", "lock"], cwd=ROOT, check=True)
 
     tag = f"v{next_ver}"
-    git("add", str(PYPROJECT.relative_to(ROOT)), str(INIT_PY.relative_to(ROOT)), "uv.lock")
+    git("add", str(INIT_PY.relative_to(ROOT)), "uv.lock")
     git("commit", "-m", f"chore: bump version to {next_ver}")
     git("tag", tag)
     git("push")

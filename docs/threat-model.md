@@ -133,9 +133,9 @@ Controls:
 
 - project-scoped lock;
 - same-filesystem staging;
-- atomic replacement where supported;
+- per-file atomic replacement where supported;
 - state written last;
-- fault-injection tests at each apply phase.
+- best-effort rollback and fault-injection tests at each apply phase.
 
 ### T9 — False confidence in generated tool safety
 

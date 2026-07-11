@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 from mcp_builder.manifest.loader import (
@@ -206,3 +207,24 @@ def test_schema_diagnostics_sanitize_complex_inputs() -> None:
     }
     assert "list" in inputs
     assert "dict" in inputs
+
+
+def test_project_version_must_be_pep440(stdio_manifest_text: str) -> None:
+    invalid = stdio_manifest_text.replace("version: 0.1.0", "version: 1.0.0-invalid-label")
+    result = load_manifest_text(invalid)
+    assert not result.ok
+    assert any("PEP 440" in diagnostic.message for diagnostic in result.diagnostics)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "defaults: &defaults\n  tests: true\ncopy: *defaults\n",
+        "cycle: &cycle [*cycle]\n",
+    ],
+)
+def test_yaml_anchors_and_aliases_are_rejected(text: str) -> None:
+    result = load_manifest_text(text)
+    assert not result.ok
+    assert result.diagnostics[0].code == "MBT-MANIFEST-006"
+    assert "anchors and aliases" in result.diagnostics[0].message

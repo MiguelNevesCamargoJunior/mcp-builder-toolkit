@@ -25,7 +25,7 @@ from mcp_builder.manifest.paths import normalize_relative_path, safe_project_pat
 
 @dataclass(frozen=True, slots=True)
 class _FileSnapshot:
-    path: Path
+    relative_path: str
     content: bytes | None
     mode: int | None
 
@@ -310,29 +310,37 @@ def _snapshot_files(project_root: Path, relative_paths: list[str]) -> list[_File
         path = safe_project_path(project_root, relative_path)
         if path.is_file():
             stat = path.stat()
-            snapshots.append(_FileSnapshot(path=path, content=path.read_bytes(), mode=stat.st_mode))
+            snapshots.append(
+                _FileSnapshot(
+                    relative_path=relative_path,
+                    content=path.read_bytes(),
+                    mode=stat.st_mode,
+                )
+            )
         else:
-            snapshots.append(_FileSnapshot(path=path, content=None, mode=None))
+            snapshots.append(_FileSnapshot(relative_path=relative_path, content=None, mode=None))
     return snapshots
 
 
 def _restore_files(snapshots: list[_FileSnapshot], project_root: Path) -> OSError | None:
     try:
         for snapshot in snapshots:
+            path = safe_project_path(project_root, snapshot.relative_path)
             if snapshot.content is None:
-                if snapshot.path.is_file():
-                    snapshot.path.unlink()
-                parent = snapshot.path.parent
+                if path.is_file():
+                    path.unlink()
+                parent = path.parent
                 while parent != project_root and parent.is_dir() and not any(parent.iterdir()):
                     parent.rmdir()
                     parent = parent.parent
                 continue
-            snapshot.path.parent.mkdir(parents=True, exist_ok=True)
-            snapshot.path.write_bytes(snapshot.content)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path = safe_project_path(project_root, snapshot.relative_path)
+            path.write_bytes(snapshot.content)
             if snapshot.mode is not None:
-                snapshot.path.chmod(snapshot.mode)
-    except OSError as exc:
-        return exc
+                path.chmod(snapshot.mode)
+    except (OSError, ValueError) as exc:
+        return exc if isinstance(exc, OSError) else OSError(str(exc))
     return None
 
 
@@ -343,6 +351,7 @@ def write_json_state_preview(plan: ArtifactPlan) -> str:
             "manifestHash": plan.manifest_hash,
             "builderVersion": plan.builder_version,
             "profile": plan.profile,
+            "protocolVersion": plan.protocol_version,
             "artifacts": [a.relative_path for a in plan.artifacts],
         },
         indent=2,

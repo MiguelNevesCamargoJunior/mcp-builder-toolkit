@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from pathlib import Path
 
 import typer
@@ -9,7 +10,7 @@ import yaml
 
 from mcp_builder import __version__
 from mcp_builder.cli.exit_codes import ExitCode
-from mcp_builder.cli.output import render_text_result, write_json
+from mcp_builder.cli.output import OutputFormat, output_is_quiet, render_text_result, write_json
 from mcp_builder.domain.diagnostics import (
     Codes,
     CommandResult,
@@ -20,11 +21,18 @@ from mcp_builder.domain.diagnostics import (
     status_from_diagnostics,
 )
 from mcp_builder.manifest.normalize import name_to_package
+from mcp_builder.targets.compatibility import (
+    DEFAULT_PROFILE_ID,
+    CompatibilityRegistry,
+)
 
-DEFAULT_PROFILE = "fastmcp-python-2026.07"
-DEFAULT_PROTOCOL = "2025-11-25"
-DEFAULT_PYTHON = ">=3.12,<3.15"
+DEFAULT_PROFILE = DEFAULT_PROFILE_ID
 MANIFEST_NAME = "mcp-builder.yaml"
+
+
+class TransportChoice(StrEnum):
+    STDIO = "stdio"
+    STREAMABLE_HTTP = "streamable-http"
 
 
 def register(app: typer.Typer) -> None:
@@ -37,8 +45,8 @@ def register(app: typer.Typer) -> None:
             resolve_path=True,
         ),
         name: str | None = typer.Option(None, "--name", help="Project name (DNS-label style)."),
-        transport: str = typer.Option(
-            "stdio",
+        transport: TransportChoice = typer.Option(
+            TransportChoice.STDIO,
             "--transport",
             help="Transport: stdio or streamable-http.",
         ),
@@ -48,27 +56,24 @@ def register(app: typer.Typer) -> None:
             "--no-interactive",
             help="Do not prompt; use flags and defaults.",
         ),
-        force_empty: bool = typer.Option(
-            False,
-            "--force-empty",
-            help="Allow non-empty directories.",
+        format: OutputFormat = typer.Option(
+            OutputFormat.TEXT, "--format", help="Output format: text or json."
         ),
-        format: str = typer.Option("text", "--format", help="Output format: text or json."),
     ) -> None:
         """Create a minimal mcp-builder.yaml manifest."""
         result = run_init(
             directory=directory,
             name=name,
-            transport=transport,
+            transport=transport.value,
             profile=profile,
             no_interactive=no_interactive,
-            force_empty=force_empty,
+            force_empty=False,
         )
-        if format == "json":
+        if format is OutputFormat.JSON:
             write_json(result)
         else:
             render_text_result(result)
-            if result.status is CommandStatus.OK:
+            if result.status is CommandStatus.OK and not output_is_quiet():
                 typer.echo("Created mcp-builder.yaml")
                 typer.echo("Next: mcp-builder validate && mcp-builder generate")
 
@@ -91,12 +96,7 @@ def run_init(
     if not directory.exists():
         directory.mkdir(parents=True, exist_ok=True)
 
-    if not force_empty:
-        # Allow empty or only hidden files? Spec: refuse non-empty unless force
-        visible = [p for p in directory.iterdir() if p.name != MANIFEST_NAME]
-        # permit empty; if other files exist without force-empty, still ok for init
-        # (init only creates manifest). Spec edge: non-empty is fine if no overwrite.
-        _ = visible
+    _ = force_empty  # retained for the internal alpha API; no public flag
 
     manifest_path = directory / MANIFEST_NAME
     if manifest_path.exists():
@@ -181,6 +181,7 @@ def _minimal_manifest(
     transport: str,
     profile: str,
 ) -> dict[str, object]:
+    compatibility = CompatibilityRegistry.default().require(profile)
     transport_block: dict[str, object]
     if transport == "streamable-http":
         transport_block = {
@@ -204,10 +205,10 @@ def _minimal_manifest(
             "target": {
                 "runtime": "fastmcp-python",
                 "profile": profile,
-                "protocolVersion": DEFAULT_PROTOCOL,
+                "protocolVersion": compatibility.protocol,
             },
             "project": {
-                "python": DEFAULT_PYTHON,
+                "python": compatibility.python,
                 "packageName": package,
                 "layout": "src",
                 "dependencyManager": "uv",

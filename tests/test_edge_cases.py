@@ -7,17 +7,13 @@ import time
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
-from mcp_builder.cli.app import app
 from mcp_builder.cli.commands.generate import run_generate
 from mcp_builder.cli.exit_codes import ExitCode
 from mcp_builder.generation.lock import GenerationLock, GenerationLockError
 from mcp_builder.manifest.loader import load_manifest_path, load_manifest_text
 from mcp_builder.manifest.normalize import normalize
 from mcp_builder.service import build_planner
-
-runner = CliRunner()
 
 
 class TestGenerationLockEdgeCases:
@@ -170,25 +166,6 @@ class TestUnicodeAndNames:
             force_managed=set(),
         )
         assert code is ExitCode.SUCCESS, result.diagnostics
-
-
-class TestStrictFlag:
-    def test_doctor_strict_flag_no_errors(self, tmp_path: Path) -> None:
-        project = tmp_path / "healthy"
-        project.mkdir()
-        runner.invoke(
-            app,
-            ["init", str(project), "--name", "healthy", "--no-interactive"],
-        )
-        runner.invoke(app, ["generate", "-f", str(project / "mcp-builder.yaml")])
-        result = runner.invoke(app, ["doctor", str(project), "--strict"])
-        assert result.exit_code == 0
-
-    def test_validate_strict_with_errors(self, tmp_path: Path) -> None:
-        bad = tmp_path / "mcp-builder.yaml"
-        bad.write_text("apiVersion: invalid\n", encoding="utf-8")
-        result = runner.invoke(app, ["validate", "-f", str(bad), "--strict"])
-        assert result.exit_code == 2
 
 
 class TestIOErrorPaths:

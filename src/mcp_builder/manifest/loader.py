@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from yaml import SafeLoader
 from yaml.constructor import ConstructorError
 from yaml.nodes import Node
+from yaml.tokens import AliasToken, AnchorToken
 
 from mcp_builder.domain.diagnostics import Codes, Diagnostic, Severity
 from mcp_builder.manifest.models import ManifestModel
@@ -136,7 +137,7 @@ def load_manifest_path(path: Path) -> LoadResult:
 
     try:
         text = path.read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeError) as exc:
         diagnostics.append(
             Diagnostic(
                 code=Codes.MANIFEST_PARSE,
@@ -165,6 +166,20 @@ def load_manifest_text(text: str, *, source: str = "<manifest>") -> LoadResult:
         return LoadResult(None, diagnostics)
 
     try:
+        for token in yaml.scan(text, Loader=RestrictedSafeLoader):
+            if isinstance(token, (AnchorToken, AliasToken)):
+                diagnostics.append(
+                    Diagnostic(
+                        code=Codes.MANIFEST_UNSAFE,
+                        severity=Severity.ERROR,
+                        message="YAML anchors and aliases are not supported",
+                        path=source,
+                        line=_yaml_line(token.start_mark),
+                        column=_yaml_column(token.start_mark),
+                        hint="Expand the value explicitly instead of using anchors or aliases.",
+                    )
+                )
+                return LoadResult(None, diagnostics)
         raw = yaml.load(text, Loader=RestrictedSafeLoader)
     except ConstructorError as exc:
         mark = getattr(exc, "problem_mark", None)

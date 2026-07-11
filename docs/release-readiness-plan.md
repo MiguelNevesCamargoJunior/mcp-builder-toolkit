@@ -40,4 +40,4 @@ into declarative API or tool generation.
 The release candidate is ready for maintainer review: all automated gates pass
 locally and the working tree contains only intentional files. Remaining actions
 are the maintainer-approved first commit and push, green hosted workflows,
-release-secret configuration, the `v0.1.0a1` tag, and post-publication pilots.
+release-secret configuration, the `v0.1.0a3` tag, and post-publication pilots.

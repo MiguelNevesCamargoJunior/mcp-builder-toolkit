@@ -38,7 +38,6 @@ mcp-builder init [DIRECTORY]
   [--transport stdio|streamable-http]
   [--profile PROFILE]
   [--no-interactive]
-  [--force-empty]
 ```
 
 Behavior:
@@ -56,14 +55,12 @@ Behavior:
 mcp-builder validate
   [-f|--file PATH]
   [--format text|json]
-  [--strict]
 ```
 
 Behavior:
 
 - performs syntax, schema, semantic, and compatibility validation;
 - does not inspect generated files;
-- `--strict` promotes warnings marked strict-compatible to errors;
 - default manifest path is `mcp-builder.yaml` in current directory.
 
 ## `generate`
@@ -75,7 +72,6 @@ mcp-builder generate
   [--dry-run]
   [--format text|json]
   [--force-managed PATH ...]
-  [--yes]
 ```
 
 Behavior:
@@ -93,7 +89,6 @@ Behavior:
 mcp-builder doctor [DIRECTORY]
   [-f|--file PATH]
   [--format text|json]
-  [--strict]
 ```
 
 When `--file PATH` is supplied, the manifest's parent directory is the project

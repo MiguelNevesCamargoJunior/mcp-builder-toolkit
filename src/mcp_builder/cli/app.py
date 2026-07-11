@@ -11,6 +11,7 @@ from typer.core import TyperGroup
 from mcp_builder import __version__
 from mcp_builder.cli.commands import doctor, generate, init, validate
 from mcp_builder.cli.exit_codes import ExitCode
+from mcp_builder.cli.output import configure_output
 from mcp_builder.domain.diagnostics import Codes
 
 
@@ -58,6 +59,7 @@ def main_callback(
     _STATE["verbose"] = verbose
     _STATE["quiet"] = quiet
     _STATE["no_color"] = no_color
+    configure_output(no_color=no_color, quiet=quiet)
 
 
 init.register(app)

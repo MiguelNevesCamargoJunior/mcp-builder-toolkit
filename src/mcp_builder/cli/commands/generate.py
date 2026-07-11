@@ -8,7 +8,7 @@ import typer
 
 from mcp_builder import __version__
 from mcp_builder.cli.exit_codes import ExitCode
-from mcp_builder.cli.output import render_text_result, write_json
+from mcp_builder.cli.output import OutputFormat, render_text_result, write_json
 from mcp_builder.domain.diagnostics import (
     Codes,
     CommandResult,
@@ -44,23 +44,23 @@ def register(app: typer.Typer) -> None:
             file_okay=False,
         ),
         dry_run: bool = typer.Option(False, "--dry-run", help="Show plan without writing."),
-        format: str = typer.Option("text", "--format", help="Output format: text or json."),
+        format: OutputFormat = typer.Option(
+            OutputFormat.TEXT, "--format", help="Output format: text or json."
+        ),
         force_managed: list[Path] = typer.Option(
             None,
             "--force-managed",
             help="Overwrite a named managed path that conflicts.",
         ),
-        yes: bool = typer.Option(False, "--yes", help="Reserved for non-interactive confirms."),
     ) -> None:
         """Validate, plan, and generate project files."""
-        _ = yes  # reserved
         result, exit_code = run_generate(
             file=file,
             output=output,
             dry_run=dry_run,
             force_managed={str(p) for p in (force_managed or [])},
         )
-        if format == "json":
+        if format is OutputFormat.JSON:
             write_json(result)
         else:
             render_text_result(result)

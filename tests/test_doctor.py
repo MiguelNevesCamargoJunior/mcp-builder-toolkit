@@ -107,6 +107,21 @@ def test_doctor_file_option_uses_manifest_directory(tmp_path: Path) -> None:
     assert state_diagnostic.path == str(project / ".mcp-builder" / "state.json")
 
 
+def test_doctor_reports_symlinked_state_directory(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    try:
+        (project / ".mcp-builder").symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks not supported on this platform")
+
+    result = run_doctor(directory=project, file=None)
+
+    assert any(d.code == "MBT-PATH-002" for d in result.diagnostics)
+
+
 def test_doctor_docker_check_docker_not_available(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

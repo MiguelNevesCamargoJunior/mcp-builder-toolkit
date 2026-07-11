@@ -5,45 +5,77 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-  id-token: write
-
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
-    environment: pypi
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
       - name: Set up Python
         run: uv python install 3.12
       - name: Install project
         run: uv sync --all-extras --locked
+      - name: Verify tag matches package version
+        run: |
+          VERSION=$(uv run python -c 'from mcp_builder import __version__; print(__version__)')
+          test "$GITHUB_REF_NAME" = "v$VERSION"
       - name: Quality gates
         run: |
           uv run ruff format --check src tests
           uv run ruff check src tests
           uv run mypy src
           uv run pytest --cov=mcp_builder --cov-branch --cov-report=term-missing -q
-      - name: Build
-        run: uv build
-      - name: Generate SBOM
+      - name: Build without local source overrides
+        run: uv build --no-sources
+      - name: Smoke wheel and sdist
+        run: |
+          for ARTIFACT in dist/*.whl dist/*.tar.gz; do
+            ROOT=$(mktemp -d)
+            ABS_ARTIFACT="$GITHUB_WORKSPACE/$ARTIFACT"
+            cd "$ROOT"
+            uvx --from "$ABS_ARTIFACT" mcp-builder --version
+            uvx --from "$ABS_ARTIFACT" mcp-builder init --name distribution-smoke --no-interactive
+            uvx --from "$ABS_ARTIFACT" mcp-builder validate
+            uvx --from "$ABS_ARTIFACT" mcp-builder generate
+            uvx --from "$ABS_ARTIFACT" mcp-builder doctor
+            cd "$GITHUB_WORKSPACE"
+            rm -rf "$ROOT"
+          done
+      - name: Generate runtime SBOM
         run: >-
           uv export --preview-features sbom-export --format cyclonedx1.5
           --no-dev --locked --output-file sbom.cdx.json
-      - name: Sigstore sign (wheel/sdist)
-        uses: sigstore/gh-action-sigstore-python@v3.0.0
+      - name: Upload verified artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          inputs: ./dist/*.tar.gz ./dist/*.whl
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
+          name: verified-release
+          if-no-files-found: error
           path: |
             dist/
             sbom.cdx.json
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install uv
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
+      - name: Download verified artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: verified-release
+      - name: Sigstore sign wheel and sdist
+        uses: sigstore/gh-action-sigstore-python@f514d46b907ebcd5bedc05145c03b69c1edd8b46 # v3.0.0
+        with:
+          inputs: ./dist/*.tar.gz ./dist/*.whl
       - name: Create GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
@@ -51,23 +83,15 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             --prerelease \
             --title "MCP Builder Toolkit $GITHUB_REF_NAME" \
-            --notes-file docs/release-notes-0.1.0.md \
+            --notes-file docs/release-notes-0.1.0a3.md \
             dist/* sbom.cdx.json
       - name: Publish to PyPI
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
           if [ -n "${UV_PUBLISH_TOKEN:-}" ]; then
-            echo "Publishing with PYPI_TOKEN..."
             uv publish --check-url https://pypi.org/simple/mcp-builder-toolkit/
           else
-            echo "No PYPI_TOKEN set, trying trusted publishing (OIDC)..."
-            uv publish --check-url https://pypi.org/simple/mcp-builder-toolkit/ || {
-              rc=$?
-              echo "::warning::PyPI publish failed (exit $rc)."
-              echo "::warning::Create a PyPI token and add it as PYPI_TOKEN secret,"
-              echo "::warning::or configure trusted publishing at:"
-              echo "::warning::https://pypi.org/manage/project/mcp-builder-toolkit/settings/publishing/"
-              exit $rc
-            }
+            uv publish --trusted-publishing always \
+              --check-url https://pypi.org/simple/mcp-builder-toolkit/
           fi

@@ -43,7 +43,7 @@ def configure_logging() -> None:
 configure_logging()
 
 {% endif %}
-mcp = FastMCP(name="{{ display_name }}")
+mcp = FastMCP(name={{ display_name | python_literal }})
 
 {% if scaffolds.example_tool %}
 register_example_tools(mcp)
@@ -55,9 +55,9 @@ def main() -> None:
 {% if is_http %}
     mcp.run(
         transport="http",
-        host=os.getenv("MCP_HOST", "{{ transport.host }}"),
+        host=os.getenv("MCP_HOST", {{ transport.host | python_literal }}),
         port=int(os.getenv("MCP_PORT", "{{ transport.port }}")),
-        path=os.getenv("MCP_PATH", "{{ transport.path }}"),
+        path=os.getenv("MCP_PATH", {{ transport.path | python_literal }}),
     )
 {% else %}
     mcp.run()

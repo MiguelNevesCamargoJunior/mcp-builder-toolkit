@@ -16,3 +16,8 @@ def test_installed_package_contains_generator_templates() -> None:
     }
     actual = {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
     assert expected <= actual
+
+
+def test_package_declares_typing_marker() -> None:
+    package_root = package_template_root("mcp_builder.targets.fastmcp_python").parents[2]
+    assert (package_root / "py.typed").is_file()

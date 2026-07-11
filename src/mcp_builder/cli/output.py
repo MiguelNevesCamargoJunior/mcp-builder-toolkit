@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from enum import StrEnum
 from typing import TextIO
 
 from rich.console import Console
@@ -16,8 +17,26 @@ from mcp_builder.domain.diagnostics import (
     Severity,
 )
 
+_OUTPUT_OPTIONS = {"no_color": False, "quiet": False}
+
+
+class OutputFormat(StrEnum):
+    TEXT = "text"
+    JSON = "json"
+
+
+def configure_output(*, no_color: bool, quiet: bool) -> None:
+    _OUTPUT_OPTIONS["no_color"] = no_color
+    _OUTPUT_OPTIONS["quiet"] = quiet
+
+
+def output_is_quiet() -> bool:
+    return _OUTPUT_OPTIONS["quiet"]
+
 
 def make_console(*, no_color: bool = False, quiet: bool = False) -> Console:
+    no_color = no_color or _OUTPUT_OPTIONS["no_color"]
+    quiet = quiet or _OUTPUT_OPTIONS["quiet"]
     return Console(
         stderr=False,
         force_terminal=None if not no_color else False,
@@ -27,6 +46,7 @@ def make_console(*, no_color: bool = False, quiet: bool = False) -> Console:
 
 
 def make_error_console(*, no_color: bool = False) -> Console:
+    no_color = no_color or _OUTPUT_OPTIONS["no_color"]
     return Console(stderr=True, no_color=no_color)
 
 

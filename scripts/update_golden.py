@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate tests/golden/stdio-minimal from the current templates."""
+"""Regenerate committed golden trees from the current templates."""
 
 from __future__ import annotations
 
@@ -13,16 +13,20 @@ sys.path.insert(0, str(ROOT / "src"))
 from mcp_builder.cli.commands.generate import run_generate  # noqa: E402
 from mcp_builder.cli.exit_codes import ExitCode  # noqa: E402
 
-MANIFEST = ROOT / "tests/golden/stdio-minimal.manifest.yaml"
-OUT = ROOT / "tests/golden/stdio-minimal"
+PROFILES = [
+    ("stdio-minimal.manifest.yaml", "stdio-minimal"),
+    ("http-docker.manifest.yaml", "http-docker"),
+]
 
 
-def main() -> int:
-    staging = ROOT / ".golden-staging"
+def update_profile(manifest_name: str, output_name: str) -> bool:
+    manifest = ROOT / "tests/golden" / manifest_name
+    output = ROOT / "tests/golden" / output_name
+    staging = ROOT / f".golden-staging-{output_name}"
     if staging.exists():
         shutil.rmtree(staging)
     staging.mkdir()
-    shutil.copy(MANIFEST, staging / "mcp-builder.yaml")
+    shutil.copy(manifest, staging / "mcp-builder.yaml")
     result, code = run_generate(
         file=staging / "mcp-builder.yaml",
         output=staging,
@@ -31,11 +35,11 @@ def main() -> int:
     )
     if code is not ExitCode.SUCCESS:
         print(result.diagnostics, file=sys.stderr)
-        return 1
+        return False
 
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    OUT.mkdir(parents=True)
+    if output.exists():
+        shutil.rmtree(output)
+    output.mkdir(parents=True)
 
     ignore = {".mcp-builder", "mcp-builder.yaml"}
     for path in staging.rglob("*"):
@@ -44,12 +48,19 @@ def main() -> int:
         rel = path.relative_to(staging)
         if rel.parts[0] in ignore:
             continue
-        dest = OUT / rel
+        dest = output / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, dest)
         print("wrote", dest.relative_to(ROOT))
     shutil.rmtree(staging)
-    print("golden updated")
+    print(f"golden updated: {output_name}")
+    return True
+
+
+def main() -> int:
+    for manifest_name, output_name in PROFILES:
+        if not update_profile(manifest_name, output_name):
+            return 1
     return 0
 
 

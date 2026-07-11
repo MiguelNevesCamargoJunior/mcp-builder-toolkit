@@ -11,7 +11,8 @@ Manifest-driven CLI that generates readable, tested Python MCP server projects w
 
 > MCP defines the protocol. MCP Builder Toolkit defines a repeatable way to create, inspect, test, and package an MCP server.
 
-**Status:** v0.1.0a1 — ready for external evaluation, not production-ready.
+**Status:** v0.1.0a2 published; v0.1.0a3 in release hardening. Alpha software,
+not production-ready.
 
 ## What the YAML controls
 
@@ -51,13 +52,10 @@ uv run mcp-builder --version
 ### Short path
 
 ```bash
-export MBT_ROOT=/path/to/mcp-builder-toolkit-spec-kit
-cd "$MBT_ROOT" && uv sync --all-extras
-
 mkdir -p ~/dev/my-mcp && cd ~/dev/my-mcp
-uv run --project "$MBT_ROOT" mcp-builder init --name my-mcp --transport stdio --no-interactive
-uv run --project "$MBT_ROOT" mcp-builder validate
-uv run --project "$MBT_ROOT" mcp-builder generate
+mcp-builder init --name my-mcp --transport stdio --no-interactive
+mcp-builder validate
+mcp-builder generate
 
 uv sync --all-extras
 uv run pytest

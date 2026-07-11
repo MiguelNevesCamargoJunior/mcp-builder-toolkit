@@ -10,7 +10,7 @@ import typer
 
 from mcp_builder import __version__
 from mcp_builder.cli.exit_codes import ExitCode
-from mcp_builder.cli.output import render_text_result, write_json
+from mcp_builder.cli.output import OutputFormat, render_text_result, write_json
 from mcp_builder.domain.diagnostics import (
     Codes,
     CommandResult,
@@ -26,6 +26,7 @@ from mcp_builder.generation.renderer import content_hash
 from mcp_builder.generation.state import state_path, try_load_state
 from mcp_builder.manifest.loader import load_manifest_path
 from mcp_builder.manifest.normalize import normalize
+from mcp_builder.manifest.paths import safe_project_path
 from mcp_builder.service import DEFAULT_MANIFEST, build_planner
 from mcp_builder.targets.compatibility import CompatibilityRegistry
 
@@ -63,12 +64,13 @@ def register(app: typer.Typer) -> None:
             help="Manifest path (defaults to <directory>/mcp-builder.yaml).",
             resolve_path=True,
         ),
-        format: str = typer.Option("text", "--format", help="Output format: text or json."),
-        strict: bool = typer.Option(False, "--strict"),
+        format: OutputFormat = typer.Option(
+            OutputFormat.TEXT, "--format", help="Output format: text or json."
+        ),
     ) -> None:
         """Check manifest, profile, state, drift, and local tools."""
-        result = run_doctor(directory=directory, file=file, strict=strict)
-        if format == "json":
+        result = run_doctor(directory=directory, file=file)
+        if format is OutputFormat.JSON:
             write_json(result)
         else:
             render_text_result(result)
@@ -129,9 +131,7 @@ def run_doctor(
         diagnostics.extend(_expected_and_drift_checks(directory, project))
         diagnostics.extend(_tool_checks(project))
 
-    if strict:
-        # Promote warnings that are marked as strict-compatible (none yet beyond recompute).
-        pass
+    _ = strict  # retained for the internal alpha API; no public flag
 
     # Attach default hints for known codes missing hints
     for d in diagnostics:
@@ -168,7 +168,17 @@ def _python_checks() -> list[Diagnostic]:
 
 
 def _state_checks(directory: Path) -> list[Diagnostic]:
-    path = state_path(directory)
+    try:
+        path = state_path(directory)
+    except ValueError as exc:
+        return [
+            Diagnostic(
+                code=Codes.PATH_INVALID,
+                severity=Severity.ERROR,
+                message=f"Unsafe build-state path: {exc}",
+                path=".mcp-builder/state.json",
+            )
+        ]
     if not path.exists():
         return [
             Diagnostic(
@@ -207,7 +217,18 @@ def _expected_and_drift_checks(directory: Path, project: ProjectSpec) -> list[Di
     state, _err = try_load_state(directory)
 
     for art in plan.artifacts:
-        dest = directory / art.relative_path
+        try:
+            dest = safe_project_path(directory, art.relative_path)
+        except ValueError as exc:
+            diagnostics.append(
+                Diagnostic(
+                    code=Codes.PATH_INVALID,
+                    severity=Severity.ERROR,
+                    message=f"Unsafe expected path: {exc}",
+                    path=art.relative_path,
+                )
+            )
+            continue
         if not dest.is_file():
             # Missing scaffold-once after first generate is info; missing managed is warning/error
             severity = Severity.WARNING if art.ownership is Ownership.MANAGED else Severity.INFO

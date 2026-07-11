@@ -10,7 +10,7 @@ This walkthrough takes you from an empty directory to a **functional Python MCP 
 6. Optionally switch to Streamable HTTP  
 
 **Time:** about 15–20 minutes (plus dependency download).  
-**Requirements:** Python 3.12 or 3.13, [uv](https://docs.astral.sh/uv/), and a clone of this repository (alpha install path).
+**Requirements:** Python 3.12, 3.13, or 3.14 and [uv](https://docs.astral.sh/uv/).
 
 ---
 
@@ -33,7 +33,7 @@ This is enough to prove the full path: **generate → implement → test → cal
 Check versions:
 
 ```bash
-python3 --version   # 3.12.x or 3.13.x
+python3 --version   # 3.12.x, 3.13.x, or 3.14.x
 uv --version
 ```
 
@@ -43,25 +43,19 @@ If `uv` is missing:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Set a shell variable to the toolkit clone (adjust the path):
+Install the published builder as an isolated command-line tool:
 
 ```bash
-export MBT_ROOT="$HOME/dev/mcp-builder-toolkit-spec-kit"
+uv tool install mcp-builder-toolkit
+mcp-builder --version
+# Expected: mcp-builder 0.1.0a2 or newer
 ```
 
-Install the builder into that project environment (one-time per clone):
+For development from a source checkout instead, contributors can use:
 
 ```bash
-cd "$MBT_ROOT"
 uv sync --all-extras
 uv run mcp-builder --version
-# Expected: mcp-builder 0.1.0a1 (or similar)
-```
-
-Helper for the rest of this guide:
-
-```bash
-alias mcp-builder='uv run --project "$MBT_ROOT" mcp-builder'
 ```
 
 ---
@@ -544,7 +538,7 @@ docker compose up --build
 
 | Symptom | What to try |
 |---------|-------------|
-| `mcp-builder: command not found` | Use `uv run --project "$MBT_ROOT" mcp-builder` or the alias from Step 0 |
+| `mcp-builder: command not found` | Run `uv tool update-shell`, open a new shell, and retry |
 | `validate` fails on profile | Keep `profile: fastmcp-python-2026.07` and `python: ">=3.12,<3.15"` |
 | `ModuleNotFoundError: task_notes_mcp` | Run commands from the project root after `uv sync` |
 | Tests fail after tool renames | Update imports in `server.py` and test files to match |

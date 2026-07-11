@@ -37,6 +37,7 @@ class GenerationPlanner:
                 manifest_hash=manifest_hash(project),
                 builder_version=__version__,
                 profile=project.target.profile,
+                protocol_version=project.target.protocol_version,
                 artifacts=[],
                 diagnostics=diagnostics,
             )
@@ -82,6 +83,7 @@ class GenerationPlanner:
             manifest_hash=manifest_hash(project),
             builder_version=__version__,
             profile=project.target.profile,
+            protocol_version=project.target.protocol_version,
             artifacts=artifacts,
             diagnostics=diagnostics,
         )

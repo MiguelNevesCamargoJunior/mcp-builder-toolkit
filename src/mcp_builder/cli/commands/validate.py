@@ -8,7 +8,7 @@ import typer
 
 from mcp_builder import __version__
 from mcp_builder.cli.exit_codes import ExitCode
-from mcp_builder.cli.output import render_text_result, write_json
+from mcp_builder.cli.output import OutputFormat, render_text_result, write_json
 from mcp_builder.domain.diagnostics import (
     CommandResult,
     CommandStatus,
@@ -31,16 +31,13 @@ def register(app: typer.Typer) -> None:
             help="Path to the project manifest.",
             resolve_path=True,
         ),
-        format: str = typer.Option("text", "--format", help="Output format: text or json."),
-        strict: bool = typer.Option(
-            False,
-            "--strict",
-            help="Promote strict-compatible warnings to errors.",
+        format: OutputFormat = typer.Option(
+            OutputFormat.TEXT, "--format", help="Output format: text or json."
         ),
     ) -> None:
         """Validate syntax, schema, semantics, and compatibility."""
-        result = run_validate(file=file, strict=strict)
-        if format == "json":
+        result = run_validate(file=file)
+        if format is OutputFormat.JSON:
             write_json(result)
         else:
             render_text_result(result)
@@ -58,9 +55,7 @@ def run_validate(*, file: Path, strict: bool = False) -> CommandResult:
         _, norm_diags = normalize(loaded.manifest)
         diagnostics.extend(norm_diags)
 
-    if strict:
-        # Future: promote marked warnings; no-op for now beyond recompute
-        pass
+    _ = strict  # retained for the internal alpha API; no public flag
 
     return CommandResult(
         command="validate",

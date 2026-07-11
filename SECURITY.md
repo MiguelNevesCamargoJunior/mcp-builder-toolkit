@@ -25,13 +25,16 @@ See `docs/threat-model.md` for the builder threat model.
 
 **Do not** open a public GitHub issue for security-sensitive reports.
 
-1. Email the maintainers (or use GitHub Security Advisories when enabled) with:
+1. Use [GitHub private vulnerability reporting](https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/security/advisories/new) with:
    - description and impact
    - reproduction steps
    - affected versions / commit
    - optional suggested fix
-2. Allow a reasonable window (typically 90 days) before public disclosure.
-3. We will acknowledge receipt and coordinate a fix and advisory when appropriate.
+2. Do not open a public issue containing vulnerability details. If private
+   reporting is temporarily unavailable, contact the maintainer through the
+   GitHub profile to establish a private channel first.
+3. Allow a reasonable window (typically 90 days) before public disclosure.
+4. We will acknowledge receipt and coordinate a fix and advisory when appropriate.
 
 ## Safe defaults in the builder
 
