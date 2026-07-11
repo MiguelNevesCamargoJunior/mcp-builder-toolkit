@@ -8,3 +8,9 @@ name: Stale (disabled)
 
 on:
   workflow_dispatch:
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Stale bot is disabled during alpha"
