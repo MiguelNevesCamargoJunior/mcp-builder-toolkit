@@ -1,0 +1,21 @@
+name: Release drafter
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@6f0c6d727ab7b44e3a2f69edfb39b8e4a82caab3 # v7.0.0
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

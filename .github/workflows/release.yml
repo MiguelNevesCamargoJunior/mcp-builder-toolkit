@@ -90,6 +90,16 @@ jobs:
             --title "MCP Builder Toolkit $GITHUB_REF_NAME" \
             --notes-file "docs/release-notes-${GITHUB_REF_NAME#v}.md" \
             dist/* sbom.cdx.json
+      - name: Publish to TestPyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          if [ -n "${UV_PUBLISH_TOKEN:-}" ]; then
+            uv publish --publish-url https://test.pypi.org/legacy/ \
+              --check-url https://test.pypi.org/simple/mcp-builder-toolkit/
+          else
+            echo "::warning::Skipping TestPyPI — no token available."
+          fi
       - name: Publish to PyPI
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}

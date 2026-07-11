@@ -1,0 +1,24 @@
+name: Wiki sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Sync docs/ to wiki
+        uses: SwiftDocOrg/github-wiki-publish-action@0f189e3988541240819df2afb30009b26e070ea4 # v1.0.3
+        with:
+          path: docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
