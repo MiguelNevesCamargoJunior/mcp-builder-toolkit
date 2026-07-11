@@ -7,6 +7,34 @@ schemas.
 
 ## [Unreleased]
 
+## [0.1.0a4] - 2026-07-10
+
+### Added
+
+- Dependabot configuration with grouped security and patch updates.
+- Branch protection rules for `main` (PR + 1 approval + required checks).
+- Issue and PR templates (bug report, feature request, security report).
+- Comprehensive CONTRIBUTING.md for external contributors.
+- Expanded AGENTS.md with 36 rules for AI agents.
+- GitHub Wiki with Home, Roadmap, Architecture, and FAQ.
+
+### Changed
+
+- Package version now derives from git tags via `hatch-vcs`. No more
+  `__version__` in `__init__.py` — the tag is the single source of truth.
+- CI matrix optimized from 9 to 5 runs (all Python on Linux, macOS/Windows
+  on 3.13 only).
+- All GitHub Actions bumped to latest versions.
+- Dependency graph enabled; `dependency-review` restored in CI.
+
+### Removed
+
+- `bump_version.py` simplified — no longer handles version bumps.
+- Auto-bump step in release workflow (no longer needed with `hatch-vcs`).
+- Hardcoded coverage badge removed (kept manual for security).
+
+## [0.1.0a3] - 2026-07-10
+
 ### Security
 
 - Contain plan and state paths inside the project and reject symlinked
@@ -56,6 +84,8 @@ First public alpha.
 - Authentication, gateways, governance, audit, A2A, and multi-language targets
   are outside this release.
 
-[Unreleased]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/compare/v0.1.0a2...HEAD
+[Unreleased]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/compare/v0.1.0a4...HEAD
+[0.1.0a4]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/releases/tag/v0.1.0a4
+[0.1.0a3]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/releases/tag/v0.1.0a3
 [0.1.0a2]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/releases/tag/v0.1.0a2
 [0.1.0a1]: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/releases/tag/v0.1.0a1
