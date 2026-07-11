@@ -6,9 +6,9 @@ Replace the example tool with your real implementations.
 
 from __future__ import annotations
 
+import os
 import json
 import logging
-import os
 
 from fastmcp import FastMCP
 
