@@ -7,7 +7,7 @@ name = "http-docker-golden"
 version = "0.1.0"
 description = "MCP server for http-docker-golden"
 readme = "README.md"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12,<3.15"
 license = "Apache-2.0"
 dependencies = [
   "fastmcp>=3.4.4,<3.5",

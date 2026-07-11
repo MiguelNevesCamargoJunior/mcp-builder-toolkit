@@ -19,7 +19,7 @@ spec:
     profile: fastmcp-python-2026.07
     protocolVersion: "2025-11-25"
   project:
-    python: ">=3.12,<3.14"
+    python: ">=3.12,<3.15"
     packageName: demo_mcp
     layout: src
     dependencyManager: uv
@@ -50,7 +50,7 @@ spec:
     profile: fastmcp-python-2026.07
     protocolVersion: "2025-11-25"
   project:
-    python: ">=3.12,<3.14"
+    python: ">=3.12,<3.15"
     packageName: http_demo
   transport:
     type: streamable-http

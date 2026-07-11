@@ -24,7 +24,7 @@ projects, not production workloads.
 | Profile | `fastmcp-python-2026.07` |
 | Runtime | `fastmcp-python` |
 | FastMCP | `>=3.4.4,<3.5` |
-| Python | `>=3.12,<3.14` |
+| Python | `>=3.12,<3.15` |
 | MCP protocol | `2025-11-25` |
 | Manifest API | `mcpbuilder.dev/v1alpha1` |
 

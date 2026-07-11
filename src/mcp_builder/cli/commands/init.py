@@ -23,7 +23,7 @@ from mcp_builder.manifest.normalize import name_to_package
 
 DEFAULT_PROFILE = "fastmcp-python-2026.07"
 DEFAULT_PROTOCOL = "2025-11-25"
-DEFAULT_PYTHON = ">=3.12,<3.14"
+DEFAULT_PYTHON = ">=3.12,<3.15"
 MANIFEST_NAME = "mcp-builder.yaml"
 
 

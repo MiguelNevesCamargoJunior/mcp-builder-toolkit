@@ -183,7 +183,7 @@ The builder release owns a compatibility record, for example:
 ```yaml
 profile: fastmcp-python-2026.07
 protocol: "2025-11-25"
-python: ">=3.12,<3.14"
+python: ">=3.12,<3.15"
 fastmcp: ">=3.4.4,<3.5"
 ```
 

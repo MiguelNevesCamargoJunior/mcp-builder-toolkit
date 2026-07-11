@@ -545,7 +545,7 @@ docker compose up --build
 | Symptom | What to try |
 |---------|-------------|
 | `mcp-builder: command not found` | Use `uv run --project "$MBT_ROOT" mcp-builder` or the alias from Step 0 |
-| `validate` fails on profile | Keep `profile: fastmcp-python-2026.07` and `python: ">=3.12,<3.14"` |
+| `validate` fails on profile | Keep `profile: fastmcp-python-2026.07` and `python: ">=3.12,<3.15"` |
 | `ModuleNotFoundError: task_notes_mcp` | Run commands from the project root after `uv sync` |
 | Tests fail after tool renames | Update imports in `server.py` and test files to match |
 | Generation conflict on README | Review the file, then `mcp-builder generate --force-managed README.md` |

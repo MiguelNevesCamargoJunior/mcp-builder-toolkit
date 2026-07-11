@@ -12,7 +12,7 @@ MCP Builder Toolkit is in **alpha**. Support is best-effort:
 
 - CLI commands: `init`, `validate`, `generate`, `doctor`
 - Manifest API: `mcpbuilder.dev/v1alpha1`
-- Compatibility profile: `fastmcp-python-2026.07` (FastMCP `>=3.4.4,<3.5`, Python `>=3.12,<3.14`, MCP `2025-11-25`)
+- Compatibility profile: `fastmcp-python-2026.07` (FastMCP `>=3.4.4,<3.5`, Python `>=3.12,<3.15`, MCP `2025-11-25`)
 
 ### What we do not promise in alpha
 

@@ -58,7 +58,7 @@ spec:
     profile: not-a-real-profile
     protocolVersion: "2025-11-25"
   project:
-    python: ">=3.12,<3.14"
+    python: ">=3.12,<3.15"
     packageName: demo_mcp
   transport:
     type: stdio
@@ -87,7 +87,7 @@ spec:
     profile: fastmcp-python-2026.07
     protocolVersion: "2025-11-25"
   project:
-    python: ">=3.12,<3.14"
+    python: ">=3.12,<3.15"
     packageName: demo_mcp
   transport:
     type: stdio
@@ -123,7 +123,7 @@ spec:
     profile: fastmcp-python-2026.07
     protocolVersion: "2025-11-25"
   project:
-    python: ">=3.12,<3.14"
+    python: ">=3.12,<3.15"
     packageName: demo_mcp
   transport:
     type: stdio

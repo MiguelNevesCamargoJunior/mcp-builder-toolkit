@@ -71,7 +71,7 @@ Host defaults remain local for direct developer execution. A container profile m
 
 | Field | Type | Default |
 |---|---|---|
-| `python` | version constraint | `>=3.12,<3.14` |
+| `python` | version constraint | `>=3.12,<3.15` |
 | `package_name` | Python identifier | derived from metadata name |
 | `layout` | enum | `src` |
 | `dependency_manager` | enum | `uv` |

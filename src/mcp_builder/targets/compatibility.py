@@ -27,9 +27,9 @@ class CompatibilityRegistry:
             id="fastmcp-python-2026.07",
             runtime="fastmcp-python",
             protocol="2025-11-25",
-            python=">=3.12,<3.14",
+            python=">=3.12,<3.15",
             fastmcp=">=3.4.4,<3.5",
-            description="FastMCP 3.4.x on Python 3.12-3.13, MCP 2025-11-25",
+            description="FastMCP 3.4.x on Python 3.12-3.14, MCP 2025-11-25",
         )
         return cls({profile.id: profile})
 
