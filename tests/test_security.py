@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
 import pytest
 
@@ -32,6 +33,12 @@ def test_rejects_oversized_manifest() -> None:
 def test_path_normalize_blocks_escape() -> None:
     with pytest.raises(ValueError):
         normalize_relative_path("../secrets")
+    with pytest.raises(ValueError):
+        normalize_relative_path("safe/../secrets")
+    with pytest.raises(ValueError):
+        normalize_relative_path("C:\\secrets")
+    with pytest.raises(ValueError):
+        normalize_relative_path("CON.txt")
 
 
 def test_generate_does_not_follow_symlink_escape(tmp_path: Path) -> None:
@@ -99,3 +106,68 @@ def test_planner_paths_are_relative(tmp_path: Path, stdio_manifest_text: str) ->
     plan = build_planner().plan(project, tmp_path)
     for art in plan.artifacts:
         normalize_relative_path(art.relative_path)
+
+
+def test_tampered_state_cannot_remove_outside_file(
+    tmp_path: Path, stdio_manifest_text: str
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    outside = tmp_path / "outside.txt"
+    outside.write_text("keep", encoding="utf-8")
+    (project / "mcp-builder.yaml").write_text(stdio_manifest_text, encoding="utf-8")
+    state_dir = project / ".mcp-builder"
+    state_dir.mkdir()
+    state = {
+        "stateVersion": "1",
+        "builderVersion": "0.1.0a1",
+        "profile": "fastmcp-python-2026.07",
+        "protocolVersion": "2025-11-25",
+        "manifestHash": "sha256:tampered",
+        "artifacts": {
+            "../../outside.txt": {
+                "ownership": "managed",
+                "generatedHash": "sha256:tampered",
+                "origin": "tampered",
+            }
+        },
+    }
+    (state_dir / "state.json").write_text(json.dumps(state), encoding="utf-8")
+
+    result, code = run_generate(
+        file=project / "mcp-builder.yaml",
+        output=project,
+        dry_run=False,
+        force_managed=set(),
+    )
+
+    assert code is ExitCode.FILESYSTEM_FAILURE
+    assert outside.read_text(encoding="utf-8") == "keep"
+    assert any("corrupt or unsafe" in diagnostic.message for diagnostic in result.diagnostics)
+
+
+@pytest.mark.parametrize("symlink_parent", ["src", ".github", ".mcp-builder"])
+def test_generate_rejects_symlinked_managed_parent(
+    tmp_path: Path, stdio_manifest_text: str, symlink_parent: str
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (project / "mcp-builder.yaml").write_text(stdio_manifest_text, encoding="utf-8")
+    link = project / symlink_parent
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks not supported on this platform")
+
+    result, code = run_generate(
+        file=project / "mcp-builder.yaml",
+        output=project,
+        dry_run=False,
+        force_managed=set(),
+    )
+
+    assert code is ExitCode.USAGE_OR_VALIDATION or code is ExitCode.FILESYSTEM_FAILURE
+    assert not any(outside.iterdir())
+    assert any("symbolic link" in diagnostic.message for diagnostic in result.diagnostics)

@@ -10,6 +10,7 @@ from mcp_builder.domain.diagnostics import Codes, Diagnostic, Severity
 from mcp_builder.domain.project import ProjectSpec
 from mcp_builder.generation.interfaces import FeatureGenerator, TargetAdapter
 from mcp_builder.manifest.normalize import manifest_hash
+from mcp_builder.manifest.paths import normalize_relative_path
 
 
 class GenerationPlanner:
@@ -48,7 +49,18 @@ class GenerationPlanner:
         # Duplicate destination check
         seen: dict[str, str] = {}
         for art in artifacts:
-            key = art.relative_path.replace("\\", "/")
+            try:
+                key = normalize_relative_path(art.relative_path)
+            except ValueError as exc:
+                diagnostics.append(
+                    Diagnostic(
+                        code=Codes.PATH_INVALID,
+                        severity=Severity.ERROR,
+                        message=f"Unsafe generated destination: {exc}",
+                        path=art.relative_path,
+                    )
+                )
+                continue
             if key in seen:
                 diagnostics.append(
                     Diagnostic(

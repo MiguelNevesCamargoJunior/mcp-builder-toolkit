@@ -19,7 +19,8 @@ from mcp_builder.domain.diagnostics import (
     Severity,
 )
 from mcp_builder.generation.renderer import content_hash
-from mcp_builder.generation.state import BuildState, load_state, save_state
+from mcp_builder.generation.state import BuildState, save_state, try_load_state
+from mcp_builder.manifest.paths import normalize_relative_path, safe_project_path
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,16 +48,16 @@ def classify_changes(
 
     Returns (user-facing changes, apply-actions with specs, diagnostics).
     """
-    force = {p.replace("\\", "/") for p in (force_managed or set())}
+    force = {normalize_relative_path(p) for p in (force_managed or set())}
     diagnostics: list[Diagnostic] = []
     changes: list[PlannedChange] = []
     actions: list[tuple[PlannedChange, ArtifactSpec | None]] = []
 
     prior_artifacts = prior.artifacts if prior else {}
-    desired_paths = {a.relative_path.replace("\\", "/"): a for a in plan.artifacts}
+    desired_paths = {normalize_relative_path(a.relative_path): a for a in plan.artifacts}
 
     for rel, art in desired_paths.items():
-        dest = project_root / rel
+        dest = safe_project_path(project_root, rel)
         exists = dest.is_file()
         current_hash = content_hash(dest.read_text(encoding="utf-8")) if exists else None
         prev = prior_artifacts.get(rel)
@@ -154,7 +155,7 @@ def classify_changes(
             continue
         if prev.ownership is not Ownership.MANAGED:
             continue
-        dest = project_root / rel
+        dest = safe_project_path(project_root, rel)
         if not dest.is_file():
             continue
         current_hash = content_hash(dest.read_text(encoding="utf-8"))
@@ -194,10 +195,27 @@ def apply_plan(
     force_managed: set[str] | None = None,
 ) -> ApplyResult:
     project_root = project_root.resolve()
-    prior = load_state(project_root)
-    changes, actions, diagnostics = classify_changes(
-        plan, project_root, prior, force_managed=force_managed
-    )
+    prior, state_error = try_load_state(project_root)
+    if state_error is not None:
+        diagnostic = Diagnostic(
+            code=Codes.GEN_IO,
+            severity=Severity.ERROR,
+            message=f"Build state is corrupt or unsafe: {state_error}",
+            path=".mcp-builder/state.json",
+            hint="Inspect or remove the state file, then regenerate.",
+        )
+        return ApplyResult(changes=[], diagnostics=[diagnostic], applied=False)
+    try:
+        changes, actions, diagnostics = classify_changes(
+            plan, project_root, prior, force_managed=force_managed
+        )
+    except (OSError, ValueError) as exc:
+        diagnostic = Diagnostic(
+            code=Codes.PATH_INVALID,
+            severity=Severity.ERROR,
+            message=f"Unsafe generation path: {exc}",
+        )
+        return ApplyResult(changes=[], diagnostics=[diagnostic], applied=False)
     diagnostics = list(plan.diagnostics) + diagnostics
 
     if any(d.severity is Severity.ERROR for d in diagnostics):
@@ -253,7 +271,7 @@ def _apply_actions(
             if change.action is PlannedChangeAction.REMOVE_MANAGED:
                 continue  # handle after successful stage of creates/updates
             assert art is not None
-            dest = staging / change.path
+            dest = safe_project_path(staging, change.path)
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text(art.content, encoding="utf-8")
             if art.mode is not None:
@@ -262,18 +280,26 @@ def _apply_actions(
         # Commit creates/updates
         for change, art in actions:
             if change.action is PlannedChangeAction.REMOVE_MANAGED:
-                target = project_root / change.path
+                target = safe_project_path(project_root, change.path)
                 if target.is_file():
                     target.unlink()
                 continue
             assert art is not None
             staged = staging / change.path
-            target = project_root / change.path
+            target = safe_project_path(project_root, change.path)
             target.parent.mkdir(parents=True, exist_ok=True)
+            target = safe_project_path(project_root, change.path)
             # Atomic replace where possible
-            tmp_name = target.with_suffix(target.suffix + ".tmp")
-            shutil.copy2(staged, tmp_name)
-            os.replace(tmp_name, target)
+            fd, temp_name = tempfile.mkstemp(
+                prefix=f".{target.name}.", suffix=".tmp", dir=target.parent
+            )
+            os.close(fd)
+            tmp_name = Path(temp_name)
+            try:
+                shutil.copy2(staged, tmp_name)
+                os.replace(tmp_name, target)
+            finally:
+                tmp_name.unlink(missing_ok=True)
     finally:
         shutil.rmtree(staging, ignore_errors=True)
 
@@ -281,7 +307,7 @@ def _apply_actions(
 def _snapshot_files(project_root: Path, relative_paths: list[str]) -> list[_FileSnapshot]:
     snapshots: list[_FileSnapshot] = []
     for relative_path in dict.fromkeys(relative_paths):
-        path = project_root / relative_path
+        path = safe_project_path(project_root, relative_path)
         if path.is_file():
             stat = path.stat()
             snapshots.append(_FileSnapshot(path=path, content=path.read_bytes(), mode=stat.st_mode))

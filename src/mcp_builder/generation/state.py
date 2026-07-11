@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from mcp_builder.domain.artifacts import ArtifactPlan
 from mcp_builder.domain.diagnostics import Ownership
+from mcp_builder.manifest.paths import normalize_relative_path, safe_project_path
 
 STATE_DIR = ".mcp-builder"
 STATE_FILE = "state.json"
@@ -35,6 +38,17 @@ class BuildState(BaseModel):
     manifest_hash: str = Field(alias="manifestHash")
     artifacts: dict[str, ArtifactState] = Field(default_factory=dict)
 
+    @field_validator("artifacts")
+    @classmethod
+    def validate_artifact_paths(cls, value: dict[str, ArtifactState]) -> dict[str, ArtifactState]:
+        normalized: dict[str, ArtifactState] = {}
+        for path, artifact in value.items():
+            safe = normalize_relative_path(path)
+            if safe != path.replace("\\", "/"):
+                raise ValueError(f"artifact path is not canonical: {path!r}")
+            normalized[safe] = artifact
+        return normalized
+
     @classmethod
     def from_plan(cls, plan: ArtifactPlan, *, protocol_version: str | None = None) -> BuildState:
         arts = {
@@ -57,7 +71,7 @@ class BuildState(BaseModel):
 
 
 def state_path(project_root: Path) -> Path:
-    return project_root / STATE_DIR / STATE_FILE
+    return safe_project_path(project_root, f"{STATE_DIR}/{STATE_FILE}")
 
 
 def load_state(project_root: Path) -> BuildState | None:
@@ -75,10 +89,10 @@ def load_state(project_root: Path) -> BuildState | None:
 
 def try_load_state(project_root: Path) -> tuple[BuildState | None, Exception | None]:
     """Load state without raising; returns (state, error)."""
-    path = state_path(project_root)
-    if not path.is_file():
-        return None, None
     try:
+        path = state_path(project_root)
+        if not path.is_file():
+            return None, None
         return load_state(project_root), None
     except Exception as exc:
         return None, exc
@@ -87,11 +101,17 @@ def try_load_state(project_root: Path) -> tuple[BuildState | None, Exception | N
 def save_state(project_root: Path, state: BuildState) -> None:
     path = state_path(project_root)
     path.parent.mkdir(parents=True, exist_ok=True)
+    path = safe_project_path(project_root, f"{STATE_DIR}/{STATE_FILE}")
     payload = state.model_dump(by_alias=True, mode="json")
     text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-    tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(text, encoding="utf-8")
-    tmp.replace(path)
+    fd, temp_name = tempfile.mkstemp(prefix=".state.", suffix=".tmp", dir=path.parent)
+    tmp = Path(temp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(text)
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def state_to_dict(state: BuildState) -> dict[str, Any]:
