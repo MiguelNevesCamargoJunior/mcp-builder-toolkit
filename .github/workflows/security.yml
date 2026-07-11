@@ -30,7 +30,7 @@ jobs:
       - name: Sync deps
         run: uv sync --all-extras --locked
       - name: Audit dependencies (pip-audit)
-        run: uv run --with pip-audit pip-audit --strict --desc on --skip-packages mcp-builder-toolkit
+        run: uv run --with pip-audit pip-audit --strict --desc on --skip-package mcp-builder-toolkit
 
   codeql:
     runs-on: ubuntu-latest
