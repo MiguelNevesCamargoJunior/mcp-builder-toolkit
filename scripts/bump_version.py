@@ -83,6 +83,7 @@ def main() -> None:
         sys.exit(0)
 
     part = sys.argv[1]
+    no_tag = "--no-tag" in sys.argv
     current = read_version()
     next_ver = bump(current, part)
     write_version(next_ver)
@@ -92,10 +93,14 @@ def main() -> None:
     tag = f"v{next_ver}"
     git("add", str(INIT_PY.relative_to(ROOT)), "uv.lock")
     git("commit", "-m", f"chore: bump version to {next_ver}")
-    git("tag", tag)
-    git("push")
-    git("push", "origin", tag)
-    print(f"\nrelease {tag} created and pushed")
+    if no_tag:
+        git("push")
+        print(f"\nversion bumped to {next_ver} on main (no tag)")
+    else:
+        git("tag", tag)
+        git("push")
+        git("push", "origin", tag)
+        print(f"\nrelease {tag} created and pushed")
 
 
 if __name__ == "__main__":
