@@ -53,5 +53,21 @@ jobs:
             --title "MCP Builder Toolkit $GITHUB_REF_NAME" \
             --notes-file docs/release-notes-0.1.0.md \
             dist/* sbom.cdx.json
-      - name: Publish to PyPI (trusted publishing)
-        run: uv publish --check-url https://pypi.org/simple/mcp-builder-toolkit/
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          if [ -n "${UV_PUBLISH_TOKEN:-}" ]; then
+            echo "Publishing with PYPI_TOKEN..."
+            uv publish --check-url https://pypi.org/simple/mcp-builder-toolkit/
+          else
+            echo "No PYPI_TOKEN set, trying trusted publishing (OIDC)..."
+            uv publish --check-url https://pypi.org/simple/mcp-builder-toolkit/ || {
+              rc=$?
+              echo "::warning::PyPI publish failed (exit $rc)."
+              echo "::warning::Create a PyPI token and add it as PYPI_TOKEN secret,"
+              echo "::warning::or configure trusted publishing at:"
+              echo "::warning::https://pypi.org/manage/project/mcp-builder-toolkit/settings/publishing/"
+              exit $rc
+            }
+          fi
