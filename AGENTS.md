@@ -133,63 +133,35 @@ uv run ruff check src tests --fix
 
 ## Agent review playbooks
 
-These are advisory review roles that AI agents may perform on PRs. They
-are **not** required checks — they produce structured output for human
-reviewers.
+Advisory review roles that AI agents may perform on PRs. See
+``.agents/reviews/`` for detailed playbooks and ``.agents/schemas/`` for
+the output schema.
 
-### Scope and Contract Guardian
+All playbooks produce structured JSON output (see ``.agents/schemas/review-result.schema.json``):
 
-Verifies:
-- Adherence to constitution and feature scope.
-- No scope creep beyond the current feature spec.
-- Changes to public contracts (``specs/**/contracts/``) are flagged.
-- ADR requirement is identified for architectural changes.
-- Migration notes are present for breaking changes.
-
-Output:
 ```json
 {
-  "scope": "within-feature | new-feature-required | constitutional-conflict",
-  "contract_change": true | false,
-  "adr_required": true | false,
-  "migration_required": true | false,
-  "findings": []
+  "reviewer": "scope-contract | security-supply-chain | generated-artifacts | release-steward",
+  "decision": "approve | comment | request-changes",
+  "confidence": 0.91,
+  "findings": [
+    {
+      "severity": "critical | high | medium | low",
+      "category": "scope | contract | path-safety | yaml | ...",
+      "path": "relevant/file.py",
+      "evidence": "Exact code or diff evidence",
+      "recommendation": "Concrete remediation",
+      "blocking": true | false
+    }
+  ]
 }
 ```
 
-### Security and Supply Chain Reviewer
+Available playbooks:
 
-Verifies:
-- Path safety and symlink handling.
-- YAML parsing and serialization safety.
-- HTTP host/port/path validation.
-- New runtime dependencies are justified.
-- Workflow permissions follow least privilege.
-- All actions pinned by commit hash.
-- No secrets or sensitive data in output.
-- Threat model updated if applicable.
-
-### Generated Artifact Reviewer
-
-Verifies:
-- Template changes update golden trees.
-- Artifact ownership (managed / scaffold-once / derived) is correct.
-- Output is deterministic.
-- Profile compatibility is maintained.
-- Generated CI and documentation match the profile.
-- No runtime dependency on the builder in generated projects.
-
-### Release Steward
-
-Verifies before tagging:
-- Version tag matches CHANGELOG and release notes.
-- ``docs/release-notes-<version>.md`` exists.
-- ``CHANGELOG.md`` is updated.
-- Profile and support matrix are accurate.
-- Wheel and sdist build and pass smoke tests.
-- SBOM and Sigstore signatures are present.
-- README badges and install instructions are current.
-- Diff from last tag has been reviewed.
-
-The agent may compile draft release notes but must **not** create tags
-or publish without human action.
+| Role | File | Focus |
+|------|------|-------|
+| Scope and Contract Guardian | ``.agents/reviews/scope-contract.md`` | Constitution, contracts, ADRs |
+| Security and Supply Chain | ``.agents/reviews/security-supply-chain.md`` | Paths, YAML, HTTP, deps, actions |
+| Generated Artifact | ``.agents/reviews/generated-artifacts.md`` | Golden trees, ownership, profiles |
+| Release Steward | ``.agents/reviews/release-steward.md`` | Version, changelog, signing |

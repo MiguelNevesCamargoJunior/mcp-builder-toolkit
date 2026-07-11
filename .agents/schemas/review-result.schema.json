@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpbuilder.dev/schemas/agent-review-result.json",
+  "title": "Agent Review Result",
+  "type": "object",
+  "required": ["reviewer", "decision", "findings"],
+  "properties": {
+    "reviewer": {
+      "type": "string",
+      "enum": ["scope-contract", "security-supply-chain", "generated-artifacts", "release-steward"]
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["approve", "comment", "request-changes"]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "category", "path", "evidence", "recommendation"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "category": { "type": "string" },
+          "path": { "type": "string" },
+          "evidence": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "blocking": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}
