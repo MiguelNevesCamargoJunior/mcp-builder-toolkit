@@ -101,11 +101,7 @@ jobs:
         run: |
           VERSION=$(uv run python -c 'from mcp_builder import __version__; print(__version__)')
           PART=$(echo "$VERSION" | grep -qE '(a|b|rc)' && echo patch || echo release)
-          NEXT=$(uv run python -c "
-import sys; sys.path.insert(0, 'scripts')
-from bump_version import bump, read_version
-print(bump(read_version(), '$PART'))
-          ")
+          NEXT=$(uv run python -c "import sys; sys.path.insert(0, 'scripts'); from bump_version import bump, read_version; print(bump(read_version(), '$PART'))")
           sed -i "s/__version__ = \"$VERSION\"/__version__ = \"$NEXT\"/" src/mcp_builder/__init__.py
           git config user.name "MCP Builder Toolkit Bot"
           git config user.email "bot@mcpbuilder.dev"
