@@ -105,6 +105,7 @@ exclude_lines = [
 target-version = "py312"
 line-length = 100
 src = ["src", "tests"]
+exclude = ["tests/golden"]
 
 [tool.ruff.lint]
 select = [
