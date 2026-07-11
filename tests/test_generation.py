@@ -140,7 +140,6 @@ def test_derived_artifact_create_update_and_unchanged(tmp_path: Path) -> None:
 
 
 def test_duplicate_path_error_in_plan(tmp_project: Path) -> None:
-    from mcp_builder.domain.diagnostics import Severity
 
     loaded = load_manifest_path(tmp_project / "mcp-builder.yaml")
     assert loaded.manifest is not None
@@ -158,7 +157,7 @@ def test_rollback_failure_logs_additional_detail(
     from mcp_builder.domain.artifacts import ArtifactPlan, ArtifactSpec
     from mcp_builder.domain.diagnostics import Ownership
     from mcp_builder.generation.renderer import content_hash
-    from mcp_builder.generation.transaction import apply_plan, _restore_files
+    from mcp_builder.generation.transaction import apply_plan
 
     spec = ArtifactSpec(
         relative_path="test.txt",

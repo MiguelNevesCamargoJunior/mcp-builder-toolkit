@@ -222,7 +222,7 @@ spec:
 """
     loaded = load_manifest_text(text)
     assert loaded.manifest is not None
-    project, diags = normalize(loaded.manifest)
+    project, _ = normalize(loaded.manifest)
     assert project is not None
     plan = build_planner().plan(project, tmp_path)
     dockerfile = next(a for a in plan.artifacts if a.relative_path == "Dockerfile")

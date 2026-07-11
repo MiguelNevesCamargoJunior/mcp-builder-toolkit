@@ -12,7 +12,6 @@ from typer.testing import CliRunner
 from mcp_builder.cli.app import app
 from mcp_builder.cli.commands.generate import run_generate
 from mcp_builder.cli.exit_codes import ExitCode
-from mcp_builder.domain.diagnostics import Severity
 from mcp_builder.generation.lock import GenerationLock, GenerationLockError
 from mcp_builder.manifest.loader import load_manifest_path, load_manifest_text
 from mcp_builder.manifest.normalize import normalize
@@ -228,8 +227,9 @@ class TestIOErrorPaths:
 
 class TestDerivedArtifact:
     def test_write_json_state_preview(self, tmp_path: Path) -> None:
-        from mcp_builder.generation.transaction import write_json_state_preview
         import json
+
+        from mcp_builder.generation.transaction import write_json_state_preview
 
         loaded = load_manifest_text(
             "apiVersion: mcpbuilder.dev/v1alpha1\n"
