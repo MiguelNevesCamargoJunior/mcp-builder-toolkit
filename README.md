@@ -3,7 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/mcp-builder-toolkit)](https://pypi.org/project/mcp-builder-toolkit/)
 [![Python](https://img.shields.io/pypi/pyversions/mcp-builder-toolkit)](https://pypi.org/project/mcp-builder-toolkit/)
 [![CI](https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen)](https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/actions)
+[![Coverage](https://img.shields.io/badge/coverage-93.0%25-brightgreen)](https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/actions)
 [![License](https://img.shields.io/github/license/MiguelNevesCamargoJunior/mcp-builder-toolkit)](LICENSE)
 [![Status](https://img.shields.io/badge/status-alpha-yellow)]()
 

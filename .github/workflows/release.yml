@@ -24,6 +24,15 @@ jobs:
           uv run ruff check src tests
           uv run mypy src
           uv run pytest --cov=mcp_builder --cov-branch --cov-report=term-missing -q
+      - name: Update coverage badge in README
+        run: |
+          uv run python scripts/update_coverage_badge.py
+          git config user.name "MCP Builder Toolkit Bot"
+          git config user.email "bot@mcpbuilder.dev"
+          git add README.md
+          if git commit -m "chore: update coverage badge [skip ci]" 2>/dev/null; then
+            git push
+          fi
       - name: Build without local source overrides
         run: uv build --no-sources
       - name: Smoke wheel and sdist
