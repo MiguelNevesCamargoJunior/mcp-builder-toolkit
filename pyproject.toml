@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
@@ -59,7 +59,7 @@ Issues = "https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/issues
 packages = ["src/mcp_builder"]
 
 [tool.hatch.version]
-path = "src/mcp_builder/__init__.py"
+source = "vcs"
 
 [tool.hatch.build.targets.sdist]
 include = [
