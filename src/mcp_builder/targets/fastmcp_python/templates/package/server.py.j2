@@ -1,0 +1,68 @@
+"""MCP server entry point.
+
+This file is scaffold-once: the builder will not overwrite your changes.
+Replace the example tool with your real implementations.
+"""
+
+from __future__ import annotations
+
+{% if is_http %}import os
+{% endif %}{% if features.structured_logging %}import json
+import logging
+
+{% endif %}from fastmcp import FastMCP
+{% if scaffolds.example_tool %}
+
+from {{ package_name }}.tools.example import register_example_tools
+{% endif %}
+
+
+{% if features.structured_logging %}
+class JsonFormatter(logging.Formatter):
+    """Format generated server logs as one JSON object per line."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "timestamp": self.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+        return json.dumps(payload, ensure_ascii=False)
+
+
+def configure_logging() -> None:
+    """Install the generated structured logger without adding dependencies."""
+    handler = logging.StreamHandler()
+    handler.setFormatter(JsonFormatter())
+    logging.basicConfig(level=logging.INFO, handlers=[handler], force=True)
+
+
+configure_logging()
+
+{% endif %}
+mcp = FastMCP(name="{{ display_name }}")
+
+{% if scaffolds.example_tool %}
+register_example_tools(mcp)
+{% endif %}
+
+
+def main() -> None:
+    """Run the MCP server."""
+{% if is_http %}
+    mcp.run(
+        transport="http",
+        host=os.getenv("MCP_HOST", "{{ transport.host }}"),
+        port=int(os.getenv("MCP_PORT", "{{ transport.port }}")),
+        path=os.getenv("MCP_PATH", "{{ transport.path }}"),
+    )
+{% else %}
+    mcp.run()
+{% endif %}
+
+
+if __name__ == "__main__":
+    main()

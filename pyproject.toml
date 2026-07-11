@@ -1,0 +1,147 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-builder-toolkit"
+version = "0.1.0a1"
+description = "Manifest-driven CLI that generates readable, tested Python MCP server projects"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12,<3.14"
+authors = [
+  { name = "MCP Builder Toolkit contributors" },
+]
+keywords = ["mcp", "fastmcp", "scaffold", "generator", "cli"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Code Generators",
+  "Typing :: Typed",
+]
+dependencies = [
+  "typer>=0.15.0",
+  "rich>=13.9.0",
+  "pydantic>=2.10.0",
+  "pydantic-core>=2.27.0",
+  "PyYAML>=6.0.2",
+  "Jinja2>=3.1.4",
+  "jsonschema>=4.23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-cov>=6.0.0",
+  "hypothesis>=6.122.0",
+  "ruff>=0.9.0",
+  "mypy>=1.14.0",
+  "types-PyYAML>=6.0.12",
+  "types-jsonschema>=4.23.0",
+]
+
+[project.scripts]
+mcp-builder = "mcp_builder.cli.app:main"
+
+[project.urls]
+Homepage = "https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit"
+Documentation = "https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit#readme"
+Issues = "https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_builder"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/specs/001-core-builder/contracts",
+  "/README.md",
+  "/LICENSE",
+  "/pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+# Golden trees are fixtures, not tests to collect.
+norecursedirs = ["golden", ".*", "build", "dist", "*.egg"]
+addopts = [
+  "--strict-markers",
+  "--strict-config",
+  "-ra",
+]
+filterwarnings = [
+  "error",
+]
+markers = [
+  "generated: generates a project and runs install/lint/type/test (needs network + uv)",
+  "golden: compares generation output to committed golden trees",
+  "mcp_smoke: MCP client initialize/list-tools/call-tool against generated server",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["mcp_builder"]
+omit = ["*/templates/*"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = false
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "UP",
+  "B",
+  "SIM",
+  "RUF",
+]
+ignore = [
+  "E501",
+  "B008",  # Typer Argument/Option defaults are intentional
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["mcp_builder"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+packages = ["mcp_builder"]
+mypy_path = "src"
+exclude = [
+  "tests/fixtures/",
+  "tests/golden/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+  "jinja2.*",
+]
+ignore_missing_imports = true

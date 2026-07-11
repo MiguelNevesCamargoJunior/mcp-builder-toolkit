@@ -1,0 +1,22 @@
+{
+  "01-bad-api-version.yaml": {
+    "minErrors": 1,
+    "codesAny": ["MBT-MANIFEST-003"]
+  },
+  "02-bad-name.yaml": {
+    "minErrors": 1,
+    "codesAny": ["MBT-MANIFEST-003"]
+  },
+  "03-compose-without-docker.yaml": {
+    "minErrors": 1,
+    "codesAny": ["MBT-MANIFEST-003", "MBT-MANIFEST-004"]
+  },
+  "04-unknown-profile.yaml": {
+    "minErrors": 1,
+    "codesAny": ["MBT-COMPAT-001"]
+  },
+  "05-path-traversal-http.yaml": {
+    "minErrors": 1,
+    "codesAny": ["MBT-MANIFEST-003"]
+  }
+}

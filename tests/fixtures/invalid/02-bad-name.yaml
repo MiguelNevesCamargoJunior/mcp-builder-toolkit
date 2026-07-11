@@ -1,0 +1,19 @@
+apiVersion: mcpbuilder.dev/v1alpha1
+kind: MCPServerProject
+metadata:
+  name: INVALID_NAME
+  version: 0.1.0
+spec:
+  target:
+    runtime: fastmcp-python
+    profile: fastmcp-python-2026.07
+    protocolVersion: "2025-11-25"
+  project:
+    python: ">=3.12,<3.14"
+    packageName: ok_pkg
+  transport:
+    type: stdio
+  features:
+    tests: true
+    lint: true
+    typing: true

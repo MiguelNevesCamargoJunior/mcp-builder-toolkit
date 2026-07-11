@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "golden-stdio"
+version = "0.1.0"
+description = "MCP server for golden-stdio"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = "Apache-2.0"
+dependencies = [
+  "fastmcp>=3.4.4,<3.5",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "ruff>=0.9.0",
+  "mypy>=1.14.0",
+]
+
+[project.scripts]
+golden-stdio = "golden_stdio.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/golden_stdio"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+packages = ["golden_stdio"]
+mypy_path = "src"
+strict = true

@@ -1,0 +1,37 @@
+"""Example tool — replace this module with your real tools.
+
+This file is scaffold-once: the builder will not overwrite your changes.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
+
+
+def echo(message: str) -> str:
+    """Echo a message back to the caller.
+
+    Args:
+        message: Text to echo.
+
+    Returns:
+        The same message string.
+    """
+    return message
+
+
+def health() -> dict[str, str]:
+    """Return a simple health status for the server."""
+    return {"status": "ok", "server": "golden-stdio"}
+
+
+def register_example_tools(mcp: FastMCP) -> None:
+    """Register example tools on the server.
+
+    Marked for replacement: delete or rewrite once you add real tools.
+    """
+    mcp.tool(echo)
+    mcp.tool(health)

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpbuilder.dev/schemas/diagnostics/v1alpha1.json",
+  "title": "MCP Builder Toolkit Command Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "command",
+    "status",
+    "builderVersion",
+    "diagnostics",
+    "summary"
+  ],
+  "properties": {
+    "command": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "warning",
+        "error"
+      ]
+    },
+    "builderVersion": {
+      "type": "string"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^MBT-[A-Z]+-[0-9]{3}$"
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "column": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hint": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "errors",
+        "warnings",
+        "info"
+      ],
+      "properties": {
+        "errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warnings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "action",
+          "ownership"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "action": {
+            "enum": [
+              "create",
+              "update",
+              "unchanged",
+              "preserve",
+              "conflict",
+              "remove-managed",
+              "orphan"
+            ]
+          },
+          "ownership": {
+            "enum": [
+              "managed",
+              "scaffold-once",
+              "derived"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+apiVersion: mcpbuilder.dev/v1alpha1
+kind: MCPServerProject
+metadata:
+  name: golden-stdio
+  version: 0.1.0
+  license: Apache-2.0
+spec:
+  target:
+    runtime: fastmcp-python
+    profile: fastmcp-python-2026.07
+    protocolVersion: "2025-11-25"
+  project:
+    python: ">=3.12,<3.14"
+    packageName: golden_stdio
+    layout: src
+    dependencyManager: uv
+  transport:
+    type: stdio
+  features:
+    tests: true
+    lint: true
+    typing: true
+    docker: false
+    compose: false
+    githubActions: true
+    structuredLogging: true
+  scaffolds:
+    exampleTool: true

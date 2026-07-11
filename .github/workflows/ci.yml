@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install package
+        run: uv sync --all-extras
+      - name: Lint
+        run: uv run ruff check src tests
+      - name: Format check
+        run: uv run ruff format --check src tests
+      - name: Type check
+        run: uv run mypy src
+      - name: Test (unit + generated-project acceptance)
+        # Includes T027/T028/T042 (@pytest.mark.generated): install, quality gates, MCP client smoke.
+        run: uv run pytest --cov=mcp_builder --cov-report=term-missing
+        env:
+          # Generated projects install FastMCP and friends; allow longer cold-cache installs.
+          UV_HTTP_TIMEOUT: "120"
+
+  container-http-smoke:
+    # T053: Linux-only container build + HTTP smoke when Docker is available.
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Set up Python
+        run: uv python install 3.12
+      - name: Install package
+        run: uv sync --all-extras
+      - name: Generate HTTP+Docker project and build image
+        run: |
+          set -euo pipefail
+          WORK=$(mktemp -d)
+          cd "$WORK"
+          uv run --project "$GITHUB_WORKSPACE" mcp-builder init --name http-smoke --transport streamable-http --no-interactive
+          # enable docker in manifest
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          p = Path("mcp-builder.yaml")
+          data = yaml.safe_load(p.read_text())
+          data["spec"]["features"]["docker"] = True
+          data["spec"]["features"]["compose"] = True
+          p.write_text(yaml.safe_dump(data, sort_keys=False))
+          PY
+          uv run --project "$GITHUB_WORKSPACE" mcp-builder generate
+          docker build -t mbt-http-smoke .
+          docker run -d --name mbt-http -p 8000:8000 mbt-http-smoke
+          for attempt in {1..20}; do
+            if curl -sS -o /dev/null http://127.0.0.1:8000/mcp; then
+              break
+            fi
+            if [ "$attempt" -eq 20 ]; then
+              docker logs mbt-http
+              exit 1
+            fi
+            sleep 1
+          done
+          uv run --with 'fastmcp>=3.4.4,<3.5' python - <<'PY'
+          import asyncio
+          from fastmcp import Client
+
+          async def main() -> None:
+              async with Client("http://127.0.0.1:8000/mcp") as client:
+                  tools = await client.list_tools()
+                  names = {tool.name for tool in tools}
+                  assert {"echo", "health"} <= names, names
+                  result = await client.call_tool("echo", {"message": "container-ok"})
+                  assert result.data == "container-ok"
+
+          asyncio.run(main())
+          PY
+          docker logs mbt-http | tail -50
+          docker rm -f mbt-http

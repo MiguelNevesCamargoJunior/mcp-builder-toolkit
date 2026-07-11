@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ metadata.name }}"
+version = "{{ version }}"
+description = "{{ description }}"
+readme = "README.md"
+requires-python = "{{ python }}"
+license = "{{ license }}"
+dependencies = [
+  "fastmcp{{ fastmcp_constraint }}",
+]
+
+[project.optional-dependencies]
+dev = [
+{% if features.tests %}
+  "pytest>=8.3.0",
+{% endif %}
+{% if features.lint %}
+  "ruff>=0.9.0",
+{% endif %}
+{% if features.typing %}
+  "mypy>=1.14.0",
+{% endif %}
+]
+
+[project.scripts]
+{{ metadata.name }} = "{{ package_name }}.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ package_name }}"]
+
+{% if features.tests %}
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+{% endif %}
+
+{% if features.lint %}
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+{% endif %}
+
+{% if features.typing %}
+[tool.mypy]
+python_version = "3.12"
+packages = ["{{ package_name }}"]
+mypy_path = "src"
+strict = true
+{% endif %}

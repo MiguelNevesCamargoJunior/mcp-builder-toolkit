@@ -1,0 +1,15 @@
+# Expected relative paths for HTTP + Docker + Compose + CI generation (T054)
+.env.example
+.github/workflows/ci.yml
+.gitignore
+.dockerignore
+Dockerfile
+README.md
+compose.yaml
+pyproject.toml
+src/http_demo/__init__.py
+src/http_demo/server.py
+src/http_demo/tools/__init__.py
+src/http_demo/tools/example.py
+tests/test_example_tool.py
+tests/test_server_smoke.py
