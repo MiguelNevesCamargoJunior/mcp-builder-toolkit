@@ -1,5 +1,11 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Discussions
+  - name: 📖 Documentation
+    url: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit#readme
+    about: Check the README and docs/ before opening an issue
+  - name: 💬 Discussions
     url: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/discussions
     about: Ask questions, share ideas, and discuss the project
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/MiguelNevesCamargoJunior/mcp-builder-toolkit/security/advisories/new
+    about: Privately report a security vulnerability (see SECURITY.md)

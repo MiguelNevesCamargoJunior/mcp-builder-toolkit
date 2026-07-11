@@ -1,0 +1,58 @@
+# Dependabot configuration for MCP Builder Toolkit.
+#
+# The project uses uv with a lockfile; Dependabot opens PRs against main,
+# and the branch protection rules require CI to pass before merging.
+#
+# For the alpha phase, only security updates and patch-level runtime
+# dependency bumps are automated. Broader version updates are evaluated
+# manually each release cycle.
+
+version: 2
+updates:
+  # ── Runtime and dev dependencies (PyPI / pip) ──────────────────────
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Sao_Paulo"
+    labels:
+      - "dependencies"
+    # Group non-major updates into single PRs to reduce noise
+    groups:
+      runtime:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+        exclude-patterns:
+          - "fastmcp*"
+          - "mcp*"
+      security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+    ignore:
+      # FastMCP and MCP SDK versions are pinned by the compatibility profile
+      - dependency-name: "fastmcp"
+      - dependency-name: "mcp"
+    # Only non-major updates during alpha; major bumps are manual
+    open-pull-requests-limit: 5
+
+  # ── GitHub Actions ─────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      time: "09:00"
+      timezone: "America/Sao_Paulo"
+    labels:
+      - "dependencies"
+      - "ci"
+    groups:
+      actions:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 3
