@@ -1,0 +1,28 @@
+name: PR lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title follows Conventional Commits
+        shell: bash
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          PATTERN='^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\(.+\))?: .+'
+          if ! echo "$TITLE" | grep -qE "$PATTERN"; then
+            echo "::error::PR title must follow Conventional Commits format:"
+            echo "  feat(cli): add interactive profile selection"
+            echo "  fix(generator): reject junction-based path escape"
+            echo "  docs: clarify Streamable HTTP exposure"
+            echo "  test(security): cover tampered state paths"
+            echo "  chore(deps): update development dependencies"
+            exit 1
+          fi
+          echo "✅ title: $TITLE"

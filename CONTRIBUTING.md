@@ -64,6 +64,17 @@ uv run mcp-builder --version
 uv run pytest -m "not generated and not mcp_smoke" -q
 ```
 
+### Optional: pre-commit hooks
+
+```bash
+uv sync --all-extras
+uv run pre-commit install
+uv run pre-commit run --all-files
+```
+
+Pre-commit is **optional**. CI is the real enforcement. You can skip hooks
+at any time with `git commit --no-verify`.
+
 ### Using the local build for development
 
 ```bash
@@ -133,6 +144,28 @@ uv run pytest -m golden -q
 ```
 
 ---
+
+## Change classification
+
+| Change type | Requirements |
+|-------------|-------------|
+| Documentation | CI basics |
+| Bug fix | Regression test |
+| Generated output change | Golden trees + acceptance test |
+| Contract/public API change | Spec update + ADR + migration note + schema diff |
+| New profile/target | ADR + compatibility suite |
+| New feature generator | Tests + golden tree + acceptance |
+| Runtime dependency | Security review + written justification |
+| Release | Changelog + release notes + artifact smoke |
+
+PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/):
+```
+feat(cli): add interactive profile selection
+fix(generator): reject junction-based path escape
+docs: clarify Streamable HTTP exposure
+test(security): cover tampered state paths
+chore(deps): update development dependencies
+```
 
 ## Pull request workflow
 

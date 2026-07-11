@@ -1,22 +1,36 @@
+# Pre-commit hooks (optional — CI enforces the same checks).
+# Install: uv run pre-commit install
+# Run:     uv run pre-commit run --all-files
+
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.10
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-PyYAML, types-jsonschema, pydantic, typer]
-        args: [--config-file=pyproject.toml]
-        pass_filenames: false
   - repo: local
     hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+        stages: [pre-commit]
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+        stages: [pre-commit]
+
+      - id: mypy
+        name: mypy
+        entry: uv run mypy src
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        always_run: true
+
       - id: pytest-fast
         name: pytest (unit, no generated)
         entry: uv run pytest -q -m "not generated and not mcp_smoke"
         language: system
         pass_filenames: false
+        stages: [pre-push]
         always_run: true
