@@ -45,8 +45,10 @@ jobs:
       - name: Type check
         run: uv run mypy src
       - name: Schema check (models vs committed JSON Schema)
+        shell: bash
         run: uv run python scripts/export_manifest_schema.py --check
       - name: Golden tree check (regenerate if templates changed)
+        shell: bash
         run: |
           uv run python scripts/update_golden.py 2>&1
           if ! git diff --stat --exit-code tests/golden/; then
