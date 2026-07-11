@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   dependency-review:
@@ -24,6 +23,8 @@ jobs:
 
   codeql:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
     steps:
       - uses: actions/checkout@v4
       - name: Initialize CodeQL
@@ -37,6 +38,8 @@ jobs:
 
   gitleaks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
