@@ -7,6 +7,30 @@ schemas.
 
 ## [Unreleased]
 
+## [0.1.0a5] - 2026-07-10
+
+### Fixed
+
+- **P0**: `GenerationLock` now uses `safe_project_path` to prevent symlink
+  traversal and junction following. Stale lock removal validates content
+  before deleting.
+- **P0**: Release workflow no longer modifies the checked-out source.
+  Coverage badge updated by a separate workflow on push to `main`.
+- **P1**: Doctor's Python version check now reads from the compatibility
+  profile, correctly reporting Python 3.14 as supported.
+- **P1**: JSON Schema is now generated from Pydantic models. CI validates
+  that `manifest.schema.json` stays in sync (`export_manifest_schema.py
+  --check`).
+- **P1**: `init` now validates profile existence, DNS label format, and
+  Python keywords before writing the manifest.
+- **P1**: Generated CI workflow includes Python 3.14 in the test matrix.
+- **P1**: Release notes are verified before publish, fail fast if missing.
+
+### Changed
+
+- Golden trees and public schema updated to match the latest models.
+- Schema export script added (`scripts/export_manifest_schema.py`).
+
 ## [0.1.0a4] - 2026-07-10
 
 ### Added

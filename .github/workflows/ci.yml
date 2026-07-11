@@ -44,6 +44,8 @@ jobs:
         run: uv run ruff format --check src tests
       - name: Type check
         run: uv run mypy src
+      - name: Schema check (models vs committed JSON Schema)
+        run: uv run python scripts/export_manifest_schema.py --check
       - name: Golden tree check (regenerate if templates changed)
         run: |
           uv run python scripts/update_golden.py 2>&1

@@ -1,201 +1,301 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mcpbuilder.dev/schemas/manifest/v1alpha1.json",
-  "title": "MCP Builder Toolkit Project Manifest",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "apiVersion",
-    "kind",
-    "metadata",
-    "spec"
-  ],
-  "properties": {
-    "apiVersion": {
-      "const": "mcpbuilder.dev/v1alpha1"
-    },
-    "kind": {
-      "const": "MCPServerProject"
-    },
-    "metadata": {
-      "type": "object",
+  "$defs": {
+    "FeaturesModel": {
       "additionalProperties": false,
+      "properties": {
+        "tests": {
+          "title": "Tests",
+          "type": "boolean"
+        },
+        "lint": {
+          "title": "Lint",
+          "type": "boolean"
+        },
+        "typing": {
+          "title": "Typing",
+          "type": "boolean"
+        },
+        "docker": {
+          "default": false,
+          "title": "Docker",
+          "type": "boolean"
+        },
+        "compose": {
+          "default": false,
+          "title": "Compose",
+          "type": "boolean"
+        },
+        "githubActions": {
+          "default": true,
+          "title": "Githubactions",
+          "type": "boolean"
+        },
+        "structuredLogging": {
+          "default": true,
+          "title": "Structuredlogging",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "tests",
+        "lint",
+        "typing"
+      ],
+      "title": "FeaturesModel",
+      "type": "object"
+    },
+    "MetadataModel": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+          "title": "Name",
+          "type": "string"
+        },
+        "displayName": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Displayname"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "version": {
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$",
+          "title": "Version",
+          "type": "string"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        }
+      },
       "required": [
         "name",
         "version"
       ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
-        },
-        "displayName": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 500
-        },
-        "version": {
-          "type": "string",
-          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
-        },
-        "license": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100
-        }
-      }
+      "title": "MetadataModel",
+      "type": "object"
     },
-    "spec": {
-      "type": "object",
+    "ProjectModel": {
       "additionalProperties": false,
+      "properties": {
+        "python": {
+          "minLength": 1,
+          "title": "Python",
+          "type": "string"
+        },
+        "packageName": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Packagename",
+          "type": "string"
+        },
+        "layout": {
+          "const": "src",
+          "default": "src",
+          "title": "Layout",
+          "type": "string"
+        },
+        "dependencyManager": {
+          "const": "uv",
+          "default": "uv",
+          "title": "Dependencymanager",
+          "type": "string"
+        }
+      },
+      "required": [
+        "python",
+        "packageName"
+      ],
+      "title": "ProjectModel",
+      "type": "object"
+    },
+    "ScaffoldsModel": {
+      "additionalProperties": false,
+      "properties": {
+        "exampleTool": {
+          "default": true,
+          "title": "Exampletool",
+          "type": "boolean"
+        }
+      },
+      "title": "ScaffoldsModel",
+      "type": "object"
+    },
+    "SpecModel": {
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/TargetModel"
+        },
+        "project": {
+          "$ref": "#/$defs/ProjectModel"
+        },
+        "transport": {
+          "discriminator": {
+            "mapping": {
+              "stdio": "#/$defs/StdioTransportModel",
+              "streamable-http": "#/$defs/StreamableHttpTransportModel"
+            },
+            "propertyName": "type"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/StdioTransportModel"
+            },
+            {
+              "$ref": "#/$defs/StreamableHttpTransportModel"
+            }
+          ],
+          "title": "Transport"
+        },
+        "features": {
+          "$ref": "#/$defs/FeaturesModel"
+        },
+        "scaffolds": {
+          "$ref": "#/$defs/ScaffoldsModel"
+        }
+      },
       "required": [
         "target",
         "project",
         "transport",
         "features"
       ],
+      "title": "SpecModel",
+      "type": "object"
+    },
+    "StdioTransportModel": {
+      "additionalProperties": false,
       "properties": {
-        "target": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "runtime",
-            "profile",
-            "protocolVersion"
-          ],
-          "properties": {
-            "runtime": {
-              "const": "fastmcp-python"
-            },
-            "profile": {
-              "type": "string",
-              "pattern": "^[a-z0-9][a-z0-9.-]+$"
-            },
-            "protocolVersion": {
-              "const": "2025-11-25"
-            }
-          }
-        },
-        "project": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "python",
-            "packageName"
-          ],
-          "properties": {
-            "python": {
-              "type": "string",
-              "minLength": 1
-            },
-            "packageName": {
-              "type": "string",
-              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
-            },
-            "layout": {
-              "const": "src",
-              "default": "src"
-            },
-            "dependencyManager": {
-              "const": "uv",
-              "default": "uv"
-            }
-          }
-        },
-        "transport": {
-          "oneOf": [
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "type"
-              ],
-              "properties": {
-                "type": {
-                  "const": "stdio"
-                }
-              }
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "type"
-              ],
-              "properties": {
-                "type": {
-                  "const": "streamable-http"
-                },
-                "host": {
-                  "type": "string",
-                  "default": "127.0.0.1"
-                },
-                "port": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 65535,
-                  "default": 8000
-                },
-                "path": {
-                  "type": "string",
-                  "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$)).*$",
-                  "default": "/mcp"
-                }
-              }
-            }
-          ]
-        },
-        "features": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "tests",
-            "lint",
-            "typing"
-          ],
-          "properties": {
-            "tests": {
-              "type": "boolean"
-            },
-            "lint": {
-              "type": "boolean"
-            },
-            "typing": {
-              "type": "boolean"
-            },
-            "docker": {
-              "type": "boolean",
-              "default": false
-            },
-            "compose": {
-              "type": "boolean",
-              "default": false
-            },
-            "githubActions": {
-              "type": "boolean",
-              "default": true
-            },
-            "structuredLogging": {
-              "type": "boolean",
-              "default": true
-            }
-          }
-        },
-        "scaffolds": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "exampleTool": {
-              "type": "boolean",
-              "default": true
-            }
-          }
+        "type": {
+          "const": "stdio",
+          "title": "Type",
+          "type": "string"
         }
-      }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "StdioTransportModel",
+      "type": "object"
+    },
+    "StreamableHttpTransportModel": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "streamable-http",
+          "title": "Type",
+          "type": "string"
+        },
+        "host": {
+          "default": "127.0.0.1",
+          "title": "Host",
+          "type": "string"
+        },
+        "port": {
+          "default": 8000,
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "Port",
+          "type": "integer"
+        },
+        "path": {
+          "default": "/mcp",
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "StreamableHttpTransportModel",
+      "type": "object"
+    },
+    "TargetModel": {
+      "additionalProperties": false,
+      "properties": {
+        "runtime": {
+          "const": "fastmcp-python",
+          "title": "Runtime",
+          "type": "string"
+        },
+        "profile": {
+          "pattern": "^[a-z0-9][a-z0-9.-]+$",
+          "title": "Profile",
+          "type": "string"
+        },
+        "protocolVersion": {
+          "const": "2025-11-25",
+          "title": "Protocolversion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "runtime",
+        "profile",
+        "protocolVersion"
+      ],
+      "title": "TargetModel",
+      "type": "object"
     }
-  }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "mcpbuilder.dev/v1alpha1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "const": "MCPServerProject",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/MetadataModel"
+    },
+    "spec": {
+      "$ref": "#/$defs/SpecModel"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "MCP Builder Toolkit Project Manifest",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpbuilder.dev/schemas/manifest/v1alpha1.json"
 }

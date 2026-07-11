@@ -20,6 +20,38 @@ class CompatibilityProfile:
     fastmcp: str
     description: str = ""
 
+    def python_versions(self) -> list[tuple[int, int]]:
+        """Return explicit (major, minor) versions from the python specifier.
+
+        Handles the ``>=X.Y,<A.B`` form used by the current profile.
+        """
+        spec = self.python.strip()
+        lo = 0, 0
+        hi = 99, 99
+        for part in spec.split(","):
+            part = part.strip()
+            if part.startswith(">="):
+                parts = part[2:].strip().split(".")
+                lo = int(parts[0]), int(parts[1])
+            elif part.startswith(">"):
+                parts = part[1:].strip().split(".")
+                lo = int(parts[0]), int(parts[1]) + 1
+            elif part.startswith("<="):
+                parts = part[2:].strip().split(".")
+                hi = int(parts[0]), int(parts[1]) + 1
+            elif part.startswith("<"):
+                parts = part[1:].strip().split(".")
+                hi = int(parts[0]), int(parts[1])
+        versions: list[tuple[int, int]] = []
+        major, minor = lo
+        while (major, minor) < hi:
+            versions.append((major, minor))
+            minor += 1
+            if minor > 15:
+                major += 1
+                minor = 0
+        return versions
+
 
 class CompatibilityRegistry:
     """In-process registry of tested builder profiles."""
