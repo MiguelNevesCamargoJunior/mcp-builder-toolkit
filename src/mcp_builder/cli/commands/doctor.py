@@ -29,8 +29,8 @@ from mcp_builder.manifest.normalize import normalize
 from mcp_builder.manifest.paths import safe_project_path
 from mcp_builder.service import DEFAULT_MANIFEST, build_planner
 from mcp_builder.targets.compatibility import (
-    CompatibilityRegistry,
     DEFAULT_PROFILE_ID,
+    CompatibilityRegistry,
 )
 
 # Documentation anchors for remediation (stable relative links).
